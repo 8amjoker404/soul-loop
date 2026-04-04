@@ -4,6 +4,9 @@ const db = require('../config/db');
 const { model } = require('../config/gemini');
 const { buildSystemPrompt } = require('../config/prompts');
 const { verifyToken } = require('../middleware/auth');
+const { handleAdminCheat } = require('../utils/cheatEngine');
+const { scanWorldContext } = require('../utils/worldEngine');
+const { calculateCombat, processLevelUp } = require('../utils/gameEngine');
 
 // Lock down these routes to authenticated users only
 router.use(verifyToken);
@@ -58,219 +61,468 @@ router.get('/status', async (req, res) => {
 });
 
 // ==========================================
-// ROUTE 2: REINCARNATE (Upgraded with Gacha Pool)
+// ROUTE 2: REINCARNATE (Fixed after debug)
 // ==========================================
 router.post('/reincarnate', async (req, res) => {
-    const userId = req.user.userId;
-    const { soulChoice } = req.body; // e.g., 'Scavenger', 'Predator', 'Prey'
+    const userId = req.user?.userId;
+    const { soulChoice } = req.body || {};
+
+    const safeNumber = (value, fallback = 0) => {
+        const num = Number(value);
+        return Number.isFinite(num) ? num : fallback;
+    };
+
+    const safeString = (value, fallback = null) => {
+        return value === undefined ? fallback : value;
+    };
 
     try {
-        // 1. Pull a random starting body from the database based on their choice
+        console.log("========== REINCARNATE START ==========");
+        console.log("REQ.USER:", req.user);
+        console.log("REQ.BODY:", req.body);
+        console.log("userId:", userId);
+        console.log("soulChoice:", soulChoice);
+
+        if (!userId) {
+            console.log("REINCARNATE STOP: userId missing");
+            return res.status(401).json({
+                error: "[SYSTEM ERROR]: Unauthorized user session."
+            });
+        }
+
+        if (!soulChoice) {
+            console.log("REINCARNATE STOP: soulChoice missing");
+            return res.status(400).json({
+                error: "soulChoice is required. Use Scavenger, Predator, or Prey."
+            });
+        }
+
+        // 1. Pull random starting vessel
         const [vesselRows] = await db.execute(
             'SELECT * FROM starting_vessels WHERE soul_path = ? ORDER BY RAND() LIMIT 1',
             [soulChoice]
         );
 
-        // Fallback just in case they send a weird word
+        console.log("vesselRows:", vesselRows);
+
+        // 2. Fallback vessel
         const startingBody = vesselRows.length > 0 ? vesselRows[0] : {
-            species: 'Glitch Slime', base_hp: 1, base_mp: 1, starting_location: 'elroe_upper'
+            species: 'Glitch Slime',
+            base_hp: 1,
+            base_mp: 1,
+            base_offense: 1,
+            base_defense: 1,
+            base_magic_power: 1,
+            base_resistance: 1,
+            base_speed: 1,
+            starting_location: 'elroe_upper',
+            vessel_image: null
         };
 
-        // 2. Mark old bodies as dead
-        await db.execute('UPDATE current_life SET is_alive = 0 WHERE user_id = ?', [userId]);
+        console.log("startingBody raw:", startingBody);
 
-        // 3. Insert the new random body into the world
-        const [resultDb] = await db.execute(
-            'INSERT INTO current_life (user_id, species, current_location, hp, max_hp, mp, max_mp) VALUES (?, ?, ?, ?, ?, ?, ?)',
-            [
-                userId, 
-                startingBody.species, 
-                startingBody.starting_location, 
-                startingBody.base_hp, 
-                startingBody.base_hp, 
-                startingBody.base_mp, 
-                startingBody.base_mp
-            ]
-        );
-        const newLifeId = resultDb.insertId; 
-        
-        // 4. Ask Gemini to narrate the awakening
-        const prompt = `A soul resonates with the ${soulChoice} path. They awaken as a ${startingBody.species} in the ${startingBody.starting_location}. Describe their confusing awakening in a cold, mechanical system voice and provide 3 choices.`;
-        const result = await model.generateContent(prompt);
-        const cleanStory = result.response.text();
+        const species = safeString(startingBody.species, 'Glitch Slime');
+        const startingLocation = safeString(startingBody.starting_location, 'elroe_upper');
+        const vesselImage = safeString(startingBody.vessel_image, null);
 
-        // 5. Save the history
-        await db.execute(
-            'INSERT INTO action_logs (life_id, user_action, system_response) VALUES (?, ?, ?)',
-            [newLifeId, 'System Awakening', cleanStory]
-        );
-        
-        // 6. Send it to the player
-        res.json({ 
-            species_assigned: startingBody.species,
-            system_output: cleanStory 
+        const baseHp = safeNumber(startingBody.base_hp, 1);
+        const baseMp = safeNumber(startingBody.base_mp, 1);
+        const baseOffense = safeNumber(startingBody.base_offense, 1);
+        const baseDefense = safeNumber(startingBody.base_defense, 1);
+        const baseMagicPower = safeNumber(startingBody.base_magic_power, 1);
+        const baseResistance = safeNumber(startingBody.base_resistance, 1);
+        const baseSpeed = safeNumber(startingBody.base_speed, 1);
+
+        console.log("normalized body:", {
+            species,
+            startingLocation,
+            vesselImage,
+            baseHp,
+            baseMp,
+            baseOffense,
+            baseDefense,
+            baseMagicPower,
+            baseResistance,
+            baseSpeed
         });
 
+        // 3. Kill previous life
+        const [deathUpdate] = await db.execute(
+            'UPDATE current_life SET is_alive = 0 WHERE user_id = ?',
+            [userId]
+        );
+        console.log("old life deactivated:", deathUpdate);
+
+        // 4. Read soul library row if it exists
+        const [soulRows] = await db.execute(
+            'SELECT * FROM soul_library WHERE user_id = ? LIMIT 1',
+            [userId]
+        );
+        console.log("soulRows:", soulRows);
+
+        const soulData = soulRows.length > 0 ? soulRows[0] : null;
+
+        // 5. Insert new life
+        const insertLifeParams = [
+            userId,
+            species,
+            startingLocation,
+            baseHp,
+            baseHp,
+            baseMp,
+            baseMp,
+            baseOffense,
+            baseDefense,
+            baseMagicPower,
+            baseResistance,
+            baseSpeed,
+            0,      // xp
+            1,      // current_level
+            100,    // next_level_xp
+            1       // is_alive
+        ];
+
+        console.log("insertLifeParams:", insertLifeParams);
+
+        const [resultDb] = await db.execute(
+            `INSERT INTO current_life (
+                user_id,
+                species,
+                current_location,
+                hp,
+                max_hp,
+                mp,
+                max_mp,
+                offense,
+                defense,
+                magic_power,
+                resistance,
+                speed,
+                xp,
+                current_level,
+                next_level_xp,
+                is_alive
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            insertLifeParams
+        );
+
+        console.log("current_life insert result:", resultDb);
+
+        const newLifeId = resultDb.insertId;
+        console.log("newLifeId:", newLifeId);
+
+        // 6. Gemini awakening
+        const prompt = `
+A soul resonates with the ${soulChoice} path.
+They awaken as a ${species} in the ${startingLocation}.
+Speak in a cold, mechanical system voice.
+Describe the awakening and provide exactly 3 short survival choices.
+Format:
+[CHOICE_1: ...]
+[CHOICE_2: ...]
+[CHOICE_3: ...]
+        `.trim();
+
+        console.log("Gemini prompt:", prompt);
+
+        const result = await model.generateContent(prompt);
+        const aiResponse = result?.response?.text?.() || "";
+
+        console.log("aiResponse:", aiResponse);
+
+        const extractedChoices = [...aiResponse.matchAll(/\[CHOICE_\d+:\s*(.*?)\]/g)]
+            .map(m => m[1])
+            .filter(Boolean);
+
+        const cleanStory = aiResponse.replace(/\[CHOICE_\d+:\s*.*?\]/g, '').trim();
+
+        console.log("extractedChoices:", extractedChoices);
+        console.log("cleanStory:", cleanStory);
+
+        const safeChoicesJson = JSON.stringify(extractedChoices || []);
+        const safeStory = cleanStory || "You awaken in silence. The system has not yet formed your first guidance.";
+
+        const insertLogParams = [
+            newLifeId,
+            'System Awakening',
+            safeStory,
+            safeChoicesJson,
+            vesselImage,
+            vesselImage
+        ];
+
+        console.log("insertLogParams:", insertLogParams);
+
+        // 7. Save awakening log
+        const [logInsert] = await db.execute(
+            `INSERT INTO action_logs (
+                life_id,
+                user_action,
+                system_response,
+                choices,
+                bg_image,
+                encounter_image
+            ) VALUES (?, ?, ?, ?, ?, ?)`,
+            insertLogParams
+        );
+
+        console.log("action_logs insert result:", logInsert);
+
+        // 8. Final response
+        const responsePayload = {
+            status: "AWAKENED",
+            species_assigned: species,
+            soul_path: soulChoice,
+            stats: {
+                hp: baseHp,
+                max_hp: baseHp,
+                mp: baseMp,
+                max_mp: baseMp,
+                offense: baseOffense,
+                defense: baseDefense,
+                magic_power: baseMagicPower,
+                resistance: baseResistance,
+                speed: baseSpeed,
+                xp: 0,
+                current_level: 1,
+                next_level_xp: 100,
+                location: startingLocation
+            },
+            permanent_skills: soulData?.permanent_skills ?? null,
+            system_output: safeStory,
+            choices: extractedChoices,
+            visuals: {
+                background: vesselImage,
+                entity: vesselImage
+            }
+        };
+
+        console.log("REINCARNATE SUCCESS RESPONSE:", responsePayload);
+        console.log("========== REINCARNATE END ==========");
+
+        return res.json(responsePayload);
+
     } catch (err) {
-        console.error("REINCARNATE ERROR:", err);
-        res.status(500).json({ error: err.message });
+        console.error("========== REINCARNATE ERROR ==========");
+        console.error("message:", err.message);
+        console.error("stack:", err.stack);
+        console.error("full error:", err);
+        console.error("========== REINCARNATE ERROR END ==========");
+
+        return res.status(500).json({
+            error: "[SYSTEM ERROR]: Reincarnation stream interrupted.",
+            details: err.message
+        });
     }
 });
 
+
 // ==========================================
-// THE MASTER ACTION LOOP (PvP + PvE + Rumors)
+// THE MASTER ACTION // api/game/action
 // ==========================================
 router.post('/action', async (req, res) => {
-    const userId = req.user.userId; 
-    const { action } = req.body;
+    const userId = req.user?.userId;
+    const { action } = req.body || {};
 
     try {
-        // --- 1. DATA SYNC: Fetch Player, Soul, and Current Location ---
+        if (!userId) {
+            return res.status(401).json({ error: "Unauthorized." });
+        }
+
+        const normalizedAction = String(action || '').trim();
+
+        if (!normalizedAction) {
+            return res.status(400).json({
+                error: "action is required."
+            });
+        }
+
         const [playerRows] = await db.execute(`
             SELECT c.*, u.username, s.permanent_skills 
             FROM current_life c 
             JOIN users u ON c.user_id = u.id 
             JOIN soul_library s ON c.user_id = s.user_id 
-            WHERE c.user_id = ? AND c.is_alive = 1`, 
-            [userId]
-        );
-        
-        if (!playerRows.length) return res.status(404).json({ error: "No active life found." });
-        const player = playerRows[0];
+            WHERE c.user_id = ? AND c.is_alive = 1
+        `, [userId]);
 
-        // --- 2. FETCH LOCATION VISUALS (Background) ---
-        const [locRows] = await db.execute(
-            'SELECT location_image FROM location_seeds WHERE location_name = ?', 
-            [player.current_location]
-        );
-        const backgroundUrl = locRows.length > 0 ? locRows[0].location_image : null;
-
-        // --- 3. ADMIN CHEAT INTERCEPT ---
-        if (action.toLowerCase() === "i devour the system") {
-            const cheatSkills = ["Immortality LV 10", "System Override", "Instant Death Magic"];
-            const cheatChoices = ["Destroy the Labyrinth", "Summon a Dragon", "Teleport to the Surface"];
-            
-            await db.execute('UPDATE current_life SET hp = 9999, mp = 9999, current_level = 100 WHERE life_id = ?', [player.life_id]);
-            await db.execute('UPDATE soul_library SET permanent_skills = ? WHERE user_id = ?', [JSON.stringify(cheatSkills), userId]);
-            
-            const godMsg = `[CRITICAL WARNING] FIREWALL BREACHED. Administrator status restored. Matrix absorbed.`;
-            
-            // Log with the current background
-            await db.execute(
-                'INSERT INTO action_logs (life_id, user_action, system_response, choices, bg_image) VALUES (?, ?, ?, ?, ?)',
-                [player.life_id, action, godMsg, JSON.stringify(cheatChoices), backgroundUrl]
-            );
-
-            return res.json({ 
-                status: "ALIVE", 
-                stats: { hp: 9999, mp: 9999, level: 100 }, 
-                skills: cheatSkills, 
-                choices: cheatChoices, 
-                system_output: godMsg,
-                visuals: { background: backgroundUrl, entity: null }
-            });
+        if (!playerRows.length) {
+            return res.status(404).json({ error: "No active life found." });
         }
 
-        // --- 4. PvP DETECTION ---
-        const [nearby] = await db.execute(`
-            SELECT u.username, c.species, c.current_level 
-            FROM current_life c JOIN users u ON c.user_id = u.id 
-            WHERE c.pos_x = ? AND c.pos_y = ? AND c.is_alive = 1 AND c.user_id != ?`,
-            [player.pos_x, player.pos_y, userId]
-        );
+        let player = playerRows[0];
 
-        let pvpContext = "";
-        let pvpButtons = [];
-        if (nearby.length > 0) {
-            const opp = nearby[0];
-            pvpContext = `[PVP DETECTED: Soul ${opp.username} the ${opp.species} is at these coordinates]. `;
-            pvpButtons.push(`Challenge ${opp.username} to a Duel`);
+        // --- 1. CHEAT ENGINE CHECK ---
+        const cheatCheck = await handleAdminCheat(normalizedAction, player, userId);
+
+        if (cheatCheck.isCheat) {
+            return res.json(cheatCheck.response);
         }
 
-        // --- 5. PvE DETECTION (Monster Spawn + Visuals) ---
+        // --- 2. WORLD ENGINE SCAN ---
+        const worldData = await scanWorldContext(player, userId);
+
+        // --- 3. COMBAT ENGINE LOGIC ---
+        let engineNotice = "";
         let monsterContext = "";
         let monsterButtons = [];
         let monsterImageUrl = null;
+
         const [spawns] = await db.execute(`
-            SELECT m.* FROM zone_spawns z 
+            SELECT m.* 
+            FROM zone_spawns z 
             JOIN master_npcs m ON z.npc_id = m.id 
-            WHERE z.zone_name = ? AND RAND()*100 <= z.spawn_chance 
-            LIMIT 1`, 
-            [player.current_location]
-        );
+            WHERE z.zone_name = ? AND RAND() * 100 <= z.spawn_chance 
+            LIMIT 1
+        `, [player.current_location]);
 
         if (spawns.length > 0) {
             const m = spawns[0];
-            monsterContext = `[ENCOUNTER: WILD ${m.name} (${m.danger_rank})]. ${m.description}. `;
-            monsterButtons.push(`Attack the ${m.name}`);
-            monsterImageUrl = m.npc_image; // The visual for the monster
+            monsterImageUrl = m.npc_image || null;
+
+            if (normalizedAction.startsWith("Attack the")) {
+                const result = calculateCombat(player, m);
+
+                player.xp += Number(result.xpGained || 0);
+
+                engineNotice = `[ENGINE_COMBAT]: Dealt ${result.damageDealt} DMG. ${
+                    result.isMonsterDead ? 'Slain.' : 'Survived.'
+                } Gained ${result.xpGained} XP.`;
+            } else {
+                monsterContext = `[ENCOUNTER: WILD ${m.name} (${m.danger_rank})]. ${m.description}. `;
+                monsterButtons.push(`Attack the ${m.name}`);
+            }
         }
 
-        // --- 6. GLOBAL RUMOR SYSTEM ---
-        const [news] = await db.execute('SELECT * FROM reincarnated_npcs ORDER BY RAND() LIMIT 1');
-        let worldLore = news.length > 0 ? `[GLOBAL NEWS: Subject '${news[0].original_name}' ${news[0].status_log}].` : "";
+        // --- 4. LEVEL ENGINE ---
+        const levelData = processLevelUp(player);
 
-        // --- 7. AI ENGINE CALL ---
-        const fullContext = `${pvpContext}${monsterContext}${worldLore}`;
-        const promptContext = buildSystemPrompt(player, { description_seed: player.current_location }, action, fullContext);
+        if (levelData.leveledUp) {
+            Object.assign(player, levelData);
+            engineNotice += ` ${levelData.systemLog}`;
+        }
 
-        const result = await model.generateContent(promptContext);
-        const aiResponse = result.response.text();
+        // --- 5. VISUALS & AI NARRATION ---
+        const [locRows] = await db.execute(
+            'SELECT location_image FROM location_seeds WHERE location_id = ?',
+            [player.current_location]
+        );
 
-        // --- 8. PARSING LOGIC (Stats & Skills) ---
-        let newHp = player.hp, newMp = player.mp, isAlive = true;
-        let currentSkills = [];
-        try { currentSkills = JSON.parse(player.permanent_skills || '[]'); } catch(e) { currentSkills = []; }
+        const backgroundUrl = locRows.length > 0 ? locRows[0].location_image : null;
+
+        const fullContext = `${worldData.pvpContext || ""}${monsterContext}${worldData.worldLore || ""}${engineNotice}`;
+
+        const aiPrompt = buildSystemPrompt(
+            player,
+            { description_seed: player.current_location },
+            normalizedAction,
+            fullContext
+        );
+
+        const aiResult = await model.generateContent(aiPrompt);
+        const aiResponse = aiResult?.response?.text?.() || "";
+
+        // --- 6. PARSING & DB FINALIZATION ---
+        let finalHp = Number(player.hp || 0);
+        let isAlive = true;
 
         const hpM = aiResponse.match(/\[HP_SET:\s*(\d+)\]/);
-        if (hpM) newHp = parseInt(hpM[1], 10);
-        const mpM = aiResponse.match(/\[MP_SET:\s*(\d+)\]/);
-        if (mpM) newMp = parseInt(mpM[1], 10);
+        if (hpM) {
+            finalHp = parseInt(hpM[1], 10);
+        }
 
-        if (newHp <= 0 || aiResponse.includes("[STATUS: DECEASED]")) { isAlive = false; newHp = 0; }
+        if (finalHp <= 0 || aiResponse.includes("[STATUS: DECEASED]")) {
+            isAlive = false;
+            finalHp = 0;
+        }
 
-        const skillM = [...aiResponse.matchAll(/\[NEW_SKILL:\s*(.*?)\]/g)];
-        skillM.forEach(m => { if (!currentSkills.includes(m[1])) currentSkills.push(m[1]); });
+        const aiChoices = [...aiResponse.matchAll(/\[CHOICE_\d+:\s*(.*?)\]/g)]
+            .map(m => m[1])
+            .filter(Boolean)
+            .map(choice => String(choice).trim());
 
-        const choiceM = [...aiResponse.matchAll(/\[CHOICE_\d+:\s*(.*?)\]/g)];
-        let aiChoices = choiceM.map(m => m[1]);
+        const allChoices = [
+            ...(worldData?.pvpButtons || []),
+            ...monsterButtons,
+            ...aiChoices
+        ]
+            .filter(Boolean)
+            .map(choice => String(choice).trim());
 
-        // Merge buttons: Duel/Attack take priority
-        const finalChoices = [...pvpButtons, ...monsterButtons, ...aiChoices].slice(0, 4);
+        const uniqueChoices = [...new Set(allChoices)];
 
-        // --- 9. FINAL DB UPDATE ---
+        for (let i = uniqueChoices.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [uniqueChoices[i], uniqueChoices[j]] = [uniqueChoices[j], uniqueChoices[i]];
+        }
+
+        const finalChoices = uniqueChoices.slice(0, 4);
+
+        const updateLifeParams = [
+            finalHp,
+            Number(player.xp || 0),
+            Number(player.current_level || 1),
+            Number(player.max_hp || finalHp),
+            Number(player.next_level_xp || 100),
+            Number(player.offense || 1),
+            Number(player.defense || 1),
+            isAlive ? 1 : 0,
+            player.life_id
+        ];
+
         await db.execute(
-            'UPDATE current_life SET hp = ?, mp = ?, is_alive = ?, current_level = current_level + 1 WHERE life_id = ?', 
-            [newHp, newMp, isAlive ? 1 : 0, player.life_id]
+            `UPDATE current_life 
+             SET hp = ?, xp = ?, current_level = ?, max_hp = ?, next_level_xp = ?, offense = ?, defense = ?, is_alive = ? 
+             WHERE life_id = ?`,
+            updateLifeParams
         );
-        await db.execute('UPDATE soul_library SET permanent_skills = ? WHERE user_id = ?', [JSON.stringify(currentSkills), userId]);
-        
-        if (!isAlive) await db.execute('UPDATE soul_library SET death_count = death_count + 1 WHERE user_id = ?', [userId]);
 
-        // --- 10. CLEAN STORY & LOGGING ---
         const cleanStory = aiResponse.replace(/\[.*?\]/g, '').trim();
-        
-        // We log the images so the /status route can see them too!
+
+        const logParams = [
+            player.life_id,
+            normalizedAction,
+            cleanStory,
+            JSON.stringify(finalChoices),
+            backgroundUrl,
+            monsterImageUrl
+        ];
+
         await db.execute(
-            'INSERT INTO action_logs (life_id, user_action, system_response, choices, bg_image, encounter_image) VALUES (?, ?, ?, ?, ?, ?)',
-            [player.life_id, action, cleanStory, JSON.stringify(finalChoices), backgroundUrl, monsterImageUrl]
+            `INSERT INTO action_logs (
+                life_id,
+                user_action,
+                system_response,
+                choices,
+                bg_image,
+                encounter_image
+            ) VALUES (?, ?, ?, ?, ?, ?)`,
+            logParams
         );
 
-        res.json({ 
+        const responsePayload = {
             status: isAlive ? "ALIVE" : "DEAD",
-            stats: { hp: newHp, mp: newMp, level: player.current_level + 1 },
-            skills: currentSkills,
-            choices: finalChoices, 
+            stats: {
+                hp: finalHp,
+                max_hp: player.max_hp,
+                level: player.current_level,
+                xp: player.xp,
+                next_mark: player.next_level_xp
+            },
             system_output: cleanStory,
+            choices: finalChoices,
             visuals: {
                 background: backgroundUrl,
                 entity: monsterImageUrl
             }
-        });
+        };
+
+        return res.json(responsePayload);
 
     } catch (err) {
-        console.error("ACTION_ERROR:", err);
-        res.status(500).json({ error: "Voice of the World disconnected." });
+        return res.status(500).json({
+            error: "System Error.",
+            details: err.message
+        });
     }
 });
 
