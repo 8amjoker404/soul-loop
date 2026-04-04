@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Apr 04, 2026 at 04:08 PM
+-- Generation Time: Apr 04, 2026 at 06:23 PM
 -- Server version: 10.4.28-MariaDB
 -- PHP Version: 8.2.4
 
@@ -49,7 +49,14 @@ INSERT INTO `action_logs` (`log_id`, `life_id`, `user_action`, `system_response`
 (5, 10, 'how about i saw a dark like oil and use my web and use it to mask my self', 'The damp limestone walls of the Upper Elroe Labyrinth weep a viscous, pitch-black secretion. You approach a pool of this dark, oil-like substance, dipping your silk strands into the sludge. As you coat your body in the mire, the sticky threads bind the dark liquid to your exoskeleton, effectively camouflaging your presence against the cavern shadows.\n\n\n\n\n\n[SYSTEM INTERCEPT]: A low-frequency vibration tremors through the stone floor nearby. Intelligence reports suggest an Earth Dragon, Feirune, is roaming a neighboring tunnel, hungry and oblivious to your presence. The air grows heavy with the scent of predatory intent.', NULL, '2026-04-03 19:15:54', NULL, NULL),
 (6, 10, 'Anchor silk above and slowly ascend into the upper crevice, moving against gravity to avoid ground vibrations.', 'The silk strands adhere to the jagged limestone ceiling with a faint, sticky snap. Utilizing Thread Manipulation, you pull your small, arachnid frame upward, defying gravity as you ascend into the dark, moisture-slicked crevice. The ground below—a hotbed of territorial predators and shifting debris—recedes into the gloom. You remain suspended, motionless, an observer in the labyrinthine shadows.\n\n[SYSTEM INTERCEPT]: A flicker of data pulses through the void. Subject \'D\' adjusts the viewport. The Labyrinth remains a game board, and the pieces are moving.\n\nYour movements are precise, though the physical exertion takes a toll on your limited stamina. You are learning the architecture of the dungeon; the way the silk catches the ambient humidity provides a sense of security against the prowling threats of the lower strata.', '[\"Scout the ceiling passage for a hidden nest or potential prey.\",\"Remain suspended in the crevice and wait for a passing monster to ambush from above.\",\"Carefully traverse the ceiling toward the sound of trickling water in the distance.\"]', '2026-04-03 19:25:55', NULL, NULL),
 (7, 11, 'System Awakening', '**SYSTEM INITIALIZATION: COMPLETE.**\n**UNIT DESIGNATION:** SCRAP SLIME.\n**LOCATION:** ELROE_UPPER, SUB-LEVEL 7.\n**PATH ALIGNMENT:** SCAVENGER.\n\n**[CORE LOG]:** Awakening detected. Sensory input: fragmented. Neural pathways: re-routing.\n**[WARNING]:** Biological structural integrity is… amorphous. The concept of ‘limbs’ is missing. You are a cohesive mass of semi-viscous, metallic-infused protoplasm. You exist in the shadows of the Elroe Great Labyrinth. Around you, the refuse of forgotten adventurers—rusted iron, shattered glass, and calcified bone—pulsates with the faint, residual mana of the Upper Strata. \n\nYou do not have lungs, yet you \'breathe\' the stagnant, mineral-heavy air. You do not have eyes, yet you \'perceive\' the molecular weight of the debris surrounding your gelatinous form. \n\n**[SYSTEM QUERY]:** How shall the Scavenger manifest?\n\n**CHOICE 1: Assimilate the Immediate.** \nAbsorb the rusted iron shards littering your spawn point. Integrate the metal into your slime-structure to increase density and defense, sacrificing mobility for durability.\n\n**CHOICE 2: Hunt the Residue.** \nExtend sensory pseudopods into the cracks of the stone floor to detect lingering mana signatures. Search for a discarded adventurer’s pouch or an abandoned potion flask. Prioritize rapid growth through consumption of magical waste.\n\n**CHOICE 3: Instinctual Evasion.** \nSense the vibrations of the environment. Something large is moving through the tunnels nearby. Mimic the texture and color of the surrounding stone to avoid early-stage predation. Prioritize survival over immediate expansion.\n\n**[AWAITING INPUT...]**', NULL, '2026-04-03 20:40:13', NULL, NULL),
-(8, 12, 'System Awakening', '[SYSTEM INITIALIZATION: COMPLETE]\n[SUBJECT STATUS: AWAKENED]\n[BIOLOGICAL CLASSIFICATION: LESSER FIRE WYRM (JUVENILE)]\n[LOCATION: MAGMA_LAYER_SECTOR_04]\n[ENVIRONMENTAL HAZARD: EXTREME THERMAL DENSITY DETECTED]\n\n[ERROR: NEURAL MAPPING INCOMPLETE]\n[WARNING: INSTINCTUAL OVERRIDE DETECTED]\n[LOG: CONSCIOUSNESS DETECTED WITHIN ORGANIC VESSEL. MOTOR FUNCTIONS RESPONDING TO PREDATORY PRIMAL DRIVES. ANALYTICAL PROCESSING IS CURRENTLY INTERFERING WITH BIOLOGICAL IMPULSES.]\n\nYou are curled within a cradle of cooling basalt and liquid rock. Your scales—obsidian-black and searing to the touch—clatter against the stone as you shift. The air tastes of sulfur and raw kinetic energy. Your vision is split: one input registers the physical world through heat-vision, flickering in shades of blinding white and deep violet; the other input is a scrolling, sterile stream of data reporting your own hunger, your internal temperature, and the proximity of potential biomass. \n\nA primal roar bubbles in your throat, but it is accompanied by a text-prompt in your mind. The system demands an immediate calibration of your predatory instincts.\n\n**CHOOSE YOUR PRIMARY EVOLUTIONARY FOCUS:**\n\n**[A] CONSUME THE CRUST:** Direct all sensory input toward the magma flow. Digest the surrounding rock and thermal energy to rapidly expand your physical frame. *Trade-off: High growth potential, low immediate mobility.*\n\n**[B] SEEK THE VIBRATION:** Ignore the hunger and focus on the tremors in the distance. Hunt for the entity producing rhythmic vibrations in the rock. *Trade-off: High lethality/tactical experience, risk of environmental exposure.*\n\n**[C] RECALIBRATE INSTINCTS:** Attempt to bypass the mechanical interface and synchronize your soul with the Wyrm’s biological mind. *Trade-off: Slow initialization, potential to stabilize the mental dissonance and unlock hidden draconic capabilities.*', NULL, '2026-04-03 20:40:30', NULL, NULL);
+(8, 12, 'System Awakening', '[SYSTEM INITIALIZATION: COMPLETE]\n[SUBJECT STATUS: AWAKENED]\n[BIOLOGICAL CLASSIFICATION: LESSER FIRE WYRM (JUVENILE)]\n[LOCATION: MAGMA_LAYER_SECTOR_04]\n[ENVIRONMENTAL HAZARD: EXTREME THERMAL DENSITY DETECTED]\n\n[ERROR: NEURAL MAPPING INCOMPLETE]\n[WARNING: INSTINCTUAL OVERRIDE DETECTED]\n[LOG: CONSCIOUSNESS DETECTED WITHIN ORGANIC VESSEL. MOTOR FUNCTIONS RESPONDING TO PREDATORY PRIMAL DRIVES. ANALYTICAL PROCESSING IS CURRENTLY INTERFERING WITH BIOLOGICAL IMPULSES.]\n\nYou are curled within a cradle of cooling basalt and liquid rock. Your scales—obsidian-black and searing to the touch—clatter against the stone as you shift. The air tastes of sulfur and raw kinetic energy. Your vision is split: one input registers the physical world through heat-vision, flickering in shades of blinding white and deep violet; the other input is a scrolling, sterile stream of data reporting your own hunger, your internal temperature, and the proximity of potential biomass. \n\nA primal roar bubbles in your throat, but it is accompanied by a text-prompt in your mind. The system demands an immediate calibration of your predatory instincts.\n\n**CHOOSE YOUR PRIMARY EVOLUTIONARY FOCUS:**\n\n**[A] CONSUME THE CRUST:** Direct all sensory input toward the magma flow. Digest the surrounding rock and thermal energy to rapidly expand your physical frame. *Trade-off: High growth potential, low immediate mobility.*\n\n**[B] SEEK THE VIBRATION:** Ignore the hunger and focus on the tremors in the distance. Hunt for the entity producing rhythmic vibrations in the rock. *Trade-off: High lethality/tactical experience, risk of environmental exposure.*\n\n**[C] RECALIBRATE INSTINCTS:** Attempt to bypass the mechanical interface and synchronize your soul with the Wyrm’s biological mind. *Trade-off: Slow initialization, potential to stabilize the mental dissonance and unlock hidden draconic capabilities.*', NULL, '2026-04-03 20:40:30', NULL, NULL),
+(9, 13, 'System Awakening', '[SYSTEM INITIALIZATION COMPLETE]\n[PATH IDENTIFIED: PREY]\n[ENTITY DESIGNATION: BLIND CAVE SALAMANDER]\n[BIOME: WATER_STRATUM]\n\nAwakening sequence initiated. Sensory input: Null (Ocular atrophy detected). Tactile input: High-velocity mineral-rich current. Chemical input: Nutrient-dense biofilm, predatory pheromones detected in proximity. The vessel is frail, translucent, and prone to rapid dehydration. Integration of biological instincts: Active. Survival probability: Negligible.', '[\"Anchor to the submerged limestone crevice to minimize metabolic expenditure.\",\"Deploy sensory vibration-sensitive whiskers to scan for nearby cavern predators.\",\"Initiate passive filter-feeding along the cave floor to restore internal energy reserves.\"]', '2026-04-04 15:27:32', NULL, NULL),
+(10, 13, 'Deploy sensory vibration-sensitive whiskers to scan for nearby cavern predators.', 'The sensory organs ripple, pushing through the stagnant, mineral-rich water of the stratum. Silence reigns, save for the rhythmic dripping of stalactites. \n\nThe vibrations return. A low-frequency pulsing emanates from the northern corridor—a rhythmic, dragging motion indicating a Cave Creeper, blind and starving. Your whiskers register the ripple of its displacement in the water. Far above the stone ceiling, a faint, phantom resonance of a  broadcast hums through the rock—a report of a soul at the Royal Academy unlocking . The disparity is vast. You are mud and instinct; they are light and ambition. The Creeper shifts closer, hungry.', '[\"Challenge light to a Duel\",\"Remain motionless to avoid detection and let the creature pass.\",\"Use the newly acquired skill to track the creature\'s path and ambush it.\",\"Flee into the deeper, uncharted fissures of the water_stratum.\"]', '2026-04-04 15:41:14', NULL, NULL),
+(11, 13, 'Remain motionless to avoid detection and let the creature pass.', 'The water in the stratum ripples with a heavy, rhythmic turbulence. A massive, bioluminescent predator glides inches above your submerged form, its jagged scales scraping against the cavern floor. You hold your breath, your damp skin blending into the mineral-rich sediment. The scent of ozone and ancient magic lingers in the water—a faint, lingering byproduct of a soul elsewhere in the world tapping into the  recently reported in the Royal Academy broadcasts. The predator senses nothing but cold stone. It drifts onward, disappearing into the dark throat of the abyss.\n\nSafety is achieved, but the stillness drains your vitality. You are small, fragile, and utterly alone in the deep.', '[\"Challenge light to a Duel\",\"Search the immediate sediment for bioluminescent fungi to consume.\",\"Swim toward the faint light emanating from a distant, upward-sloping tunnel.\",\"Use your remaining energy to sharpen your sensory organs, attempting to perceive the vibrations of the surrounding tunnels.\"]', '2026-04-04 15:46:02', NULL, NULL),
+(12, 13, 'Use your remaining energy to sharpen your sensory organs, attempting to perceive the vibrations of the surrounding tunnels.', 'The water in the stratum remains stagnant, clinging to your translucent, sightless skin like a shroud. You channel your internal essence toward your lateral line and nasal receptors, pushing past the threshold of mere instinct. The world does not brighten, but it clarifies; the oppressive silence fractures into a complex map of tectonic tremors and the rhythmic drip of calcified stalactites.\n\nAs your senses bloom, a jagged psychic resonance ripples through the cavern—a stray signal from the Surface. *.]* The triviality of their achievements feels distant, a flare of warmth in a world of absolute zero. The strain of sensory expansion causes your fragile tissues to throb, leaving you slightly drained.', '[\"Challenge light to a Duel\",\"Follow a faint, rhythmic vibration echoing from the deeper, darker reaches of the tunnel.\",\"Remain stationary and attempt to conserve energy, waiting for potential prey to drift into range.\",\"Navigate toward the surface of the pool, seeking to investigate the air-breathing alcoves above.\"]', '2026-04-04 15:47:19', NULL, NULL),
+(13, 13, 'Use your remaining energy to sharpen your sensory organs, attempting to perceive the vibrations of the surrounding tunnels.', 'The lightless expanse of the water stratum shudders. You push your internal essence outward, straining your damp, pale nerves against the stagnant stillness of the cavern. The water ripples, carrying the whispers of the earth. You feel the heavy, rhythmic thrum of distant crushing stone and the erratic, high-frequency agitation of something skittering along the cavern roof.\n\nA broadcast flickers across your consciousness, cold and detached: ** \n\nAs your senses bloom, the vibrations coalesce into a mental map of the nearby currents. You have evolved beyond mere instinct.', '[\"Challenge light to a Duel\",\"Follow the skittering vibrations toward the cavern ceiling to hunt.\",\"Remain still in the water, conserving energy while monitoring the nearby tunnel junction.\",\"Dive deeper into the submerged crevice to avoid whatever entity just broadcasted its presence.\"]', '2026-04-04 15:48:11', NULL, NULL),
+(14, 13, 'Remain still in the water, conserving energy while monitoring the nearby tunnel junction.', 'The water of the subterranean pool is still, mirroring the oppressive darkness of the cavern. You anchor yourself against a jagged limestone formation, your translucent skin cooling as you wait. Above the water\'s surface, the air grows thin and humid. \n\nFaint vibrations ripple through the cavern floor—the rhythmic, tectonic shifting of a creature far more massive than yourself. From the nearby tunnel junction, a flick of heat emanates, signaling the proximity of the Lesser Fire Wyrm known as \'joker.\' The System broadcasts a silent, mocking vibration into your primitive sensory organs: *“Two sparks in the dark, yet only one shall illuminate the path to evolution.”* You remain undetected, your stillness granting you a reprieve from the predator\'s gaze.', '[\"Threaten joker\",\"Slowly creep toward the tunnel junction to ambush the Fire Wyrm while it is distracted.\",\"Ignore joker for now\",\"Swim deeper into the subterranean lake to avoid the proximity of the Fire Wyrm.\"]', '2026-04-04 15:55:06', NULL, NULL),
+(15, 13, 'Ignore joker for now', 'The icy currents of the water_stratum offer a sanctuary of silence. You glide through the mineral-rich darkness, distancing yourself from the heat signature radiating from the cavern above. The Lesser Fire Wyrm, Joker, remains oblivious to your path, his hunger currently focused on the cavern floor miles away. A telepathic tremor vibrates through the stone; the System broadcasts a whisper of his violent descent into the upper labyrinth, but you press deeper into the subterranean pools, preserving your vitality.', '[\"Search the submerged floor for nutrient-dense moss to recover HP.\",\"Ignore joker for now\",\"Navigate deeper into the uncharted tunnels of the water_stratum.\",\"Surface slightly to listen for the movements of other souls.\"]', '2026-04-04 15:55:31', NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -69,18 +76,28 @@ CREATE TABLE `current_life` (
   `current_location` varchar(50) DEFAULT 'elroe_upper',
   `is_alive` tinyint(1) DEFAULT 1,
   `pos_x` int(11) DEFAULT 0,
-  `pos_y` int(11) DEFAULT 0
+  `pos_y` int(11) DEFAULT 0,
+  `xp` int(11) DEFAULT 0,
+  `next_level_xp` int(11) DEFAULT 100,
+  `attribute_points` int(11) DEFAULT 0,
+  `offense` int(11) DEFAULT 5,
+  `defense` int(11) DEFAULT 5,
+  `magic_power` int(11) DEFAULT 5,
+  `resistance` int(11) DEFAULT 5,
+  `speed` int(11) DEFAULT 5,
+  `skill_points` int(11) DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `current_life`
 --
 
-INSERT INTO `current_life` (`life_id`, `user_id`, `species`, `current_level`, `hp`, `max_hp`, `mp`, `max_mp`, `current_location`, `is_alive`, `pos_x`, `pos_y`) VALUES
-(9, 1, 'Cave Centipede', 1, 15, 15, 5, 5, 'elroe_upper', 0, 0, 0),
-(10, 1, 'Small Lesser Taratect', 4, 15, 10, 6, 10, 'elroe_upper', 1, 0, 0),
-(11, 2, 'Scrap Slime', 1, 14, 20, 20, 20, 'elroe_upper', 0, 0, 0),
-(12, 2, 'Lesser Fire Wyrm', 1, 14, 25, 10, 10, 'magma_layer', 1, 0, 0);
+INSERT INTO `current_life` (`life_id`, `user_id`, `species`, `current_level`, `hp`, `max_hp`, `mp`, `max_mp`, `current_location`, `is_alive`, `pos_x`, `pos_y`, `xp`, `next_level_xp`, `attribute_points`, `offense`, `defense`, `magic_power`, `resistance`, `speed`, `skill_points`) VALUES
+(9, 1, 'Cave Centipede', 1, 15, 15, 5, 5, 'elroe_upper', 0, 0, 0, 0, 100, 0, 5, 5, 5, 5, 5, 0),
+(10, 1, 'Small Lesser Taratect', 4, 15, 10, 6, 10, 'elroe_upper', 1, 0, 0, 0, 100, 0, 5, 5, 5, 5, 5, 0),
+(11, 2, 'Scrap Slime', 1, 14, 20, 20, 20, 'elroe_upper', 0, 0, 0, 0, 100, 0, 5, 5, 5, 5, 5, 0),
+(12, 2, 'Lesser Fire Wyrm', 1, 14, 25, 10, 10, 'magma_layer', 1, 0, 0, 0, 100, 0, 5, 5, 5, 5, 5, 0),
+(13, 3, 'Blind Cave Salamander', 1, 27, 30, 10, 10, 'water_stratum', 1, 0, 0, 0, 100, 0, 6, 12, 4, 15, 5, 0);
 
 -- --------------------------------------------------------
 
@@ -156,6 +173,30 @@ INSERT INTO `evolution_paths` (`evolution_id`, `from_species`, `to_species`, `re
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `location_connectors`
+--
+
+CREATE TABLE `location_connectors` (
+  `connector_id` int(11) NOT NULL,
+  `from_location` varchar(50) NOT NULL,
+  `to_location` varchar(50) NOT NULL,
+  `direction` enum('UP','DOWN','NORTH','SOUTH','EAST','WEST') NOT NULL,
+  `min_level_req` int(11) DEFAULT 1
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `location_connectors`
+--
+
+INSERT INTO `location_connectors` (`connector_id`, `from_location`, `to_location`, `direction`, `min_level_req`) VALUES
+(1, 'elroe_upper', 'elroe_middle', 'DOWN', 1),
+(2, 'elroe_middle', 'elroe_upper', 'UP', 1),
+(3, 'elroe_middle', 'elroe_lower', 'DOWN', 1),
+(4, 'elroe_lower', 'elroe_middle', 'UP', 1);
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `location_seeds`
 --
 
@@ -163,17 +204,19 @@ CREATE TABLE `location_seeds` (
   `location_id` varchar(50) NOT NULL,
   `description_seed` text DEFAULT NULL,
   `location_image` varchar(255) DEFAULT NULL,
-  `danger_level` int(11) DEFAULT NULL
+  `danger_level` int(11) DEFAULT NULL,
+  `region_name` varchar(50) DEFAULT 'elroe_labyrinth',
+  `level_depth` int(11) DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `location_seeds`
 --
 
-INSERT INTO `location_seeds` (`location_id`, `description_seed`, `location_image`, `danger_level`) VALUES
-('elroe_lower', 'Lower Elroe Labyrinth: A hellish, cavernous landscape teeming with earth dragons and venomous beasts.', NULL, 6),
-('elroe_upper', 'Upper Elroe Labyrinth: A sprawling network of dark, damp limestone caves. Weak monsters and sticky webs everywhere.', NULL, 2),
-('magma_layer', 'Magma Layer: Rivers of flowing lava and extreme heat. Fire resistance is mandatory.', NULL, 9);
+INSERT INTO `location_seeds` (`location_id`, `description_seed`, `location_image`, `danger_level`, `region_name`, `level_depth`) VALUES
+('elroe_lower', 'Lower Elroe Labyrinth: A hellish, cavernous landscape teeming with earth dragons and venomous beasts.', NULL, 6, 'elroe_labyrinth', 1),
+('elroe_upper', 'Upper Elroe Labyrinth: A sprawling network of dark, damp limestone caves. Weak monsters and sticky webs everywhere.', NULL, 2, 'elroe_labyrinth', 2),
+('magma_layer', 'Magma Layer: Rivers of flowing lava and extreme heat. Fire resistance is mandatory.', NULL, 9, 'elroe_labyrinth', 0);
 
 -- --------------------------------------------------------
 
@@ -261,18 +304,19 @@ CREATE TABLE `soul_library` (
   `soul_rank` int(11) DEFAULT 1,
   `accumulated_karma` int(11) DEFAULT 0,
   `permanent_skills` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`permanent_skills`)),
-  `death_count` int(11) DEFAULT 0
+  `death_count` int(11) DEFAULT 0,
+  `skill_points` int(11) DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `soul_library`
 --
 
-INSERT INTO `soul_library` (`user_id`, `soul_rank`, `accumulated_karma`, `permanent_skills`, `death_count`) VALUES
-(1, 1, 0, '[\"Night Vision\",\"Thread Manipulation\",\"Camouflage\",\"Thread Craft\"]', 0),
-(2, 1, 0, '[]', 0),
-(3, 1, 0, '[]', 0),
-(4, 1, 0, '[]', 0);
+INSERT INTO `soul_library` (`user_id`, `soul_rank`, `accumulated_karma`, `permanent_skills`, `death_count`, `skill_points`) VALUES
+(1, 1, 0, '[\"Night Vision\",\"Thread Manipulation\",\"Camouflage\",\"Thread Craft\"]', 0, 0),
+(2, 1, 0, '[]', 0, 0),
+(3, 1, 0, '[]', 0, 0),
+(4, 1, 0, '[]', 0, 0);
 
 -- --------------------------------------------------------
 
@@ -287,21 +331,31 @@ CREATE TABLE `starting_vessels` (
   `base_hp` int(11) DEFAULT NULL,
   `base_mp` int(11) DEFAULT NULL,
   `starting_location` varchar(50) DEFAULT NULL,
-  `vessel_image` varchar(255) DEFAULT NULL
+  `vessel_image` varchar(255) DEFAULT NULL,
+  `base_offense` int(11) DEFAULT 5,
+  `base_defense` int(11) DEFAULT 5,
+  `base_magic_power` int(11) DEFAULT 5,
+  `base_resistance` int(11) DEFAULT 5,
+  `base_speed` int(11) DEFAULT 5
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Dumping data for table `starting_vessels`
 --
 
-INSERT INTO `starting_vessels` (`vessel_id`, `soul_path`, `species`, `base_hp`, `base_mp`, `starting_location`, `vessel_image`) VALUES
-(1, 'Scavenger', 'Small Lesser Taratect', 10, 10, 'elroe_upper', NULL),
-(2, 'Scavenger', 'Cave Centipede', 15, 5, 'elroe_upper', NULL),
-(3, 'Scavenger', 'Scrap Slime', 20, 20, 'elroe_upper', NULL),
-(4, 'Predator', 'Wolf Pup', 20, 5, 'elroe_upper', NULL),
-(5, 'Predator', 'Lesser Fire Wyrm', 25, 10, 'magma_layer', NULL),
-(6, 'Prey', 'Weakling Rat', 5, 5, 'elroe_upper', NULL),
-(7, 'Prey', 'Cave Bat', 8, 8, 'elroe_upper', NULL);
+INSERT INTO `starting_vessels` (`vessel_id`, `soul_path`, `species`, `base_hp`, `base_mp`, `starting_location`, `vessel_image`, `base_offense`, `base_defense`, `base_magic_power`, `base_resistance`, `base_speed`) VALUES
+(1, 'Scavenger', 'Small Lesser Taratect', 10, 10, 'elroe_upper', NULL, 6, 4, 8, 5, 12),
+(2, 'Scavenger', 'Cave Centipede', 15, 5, 'elroe_upper', NULL, 8, 6, 2, 4, 10),
+(3, 'Scavenger', 'Scrap Slime', 20, 20, 'elroe_upper', NULL, 4, 10, 12, 12, 3),
+(4, 'Scavenger', 'Spectral Mite', 8, 25, 'elroe_upper', NULL, 3, 2, 15, 10, 14),
+(5, 'Predator', 'Wolf Pup', 20, 5, 'elroe_upper', NULL, 12, 6, 2, 4, 15),
+(6, 'Predator', 'Lesser Fire Wyrm', 25, 10, 'magma_layer', NULL, 14, 8, 10, 8, 10),
+(7, 'Predator', 'Venomous Hatchling', 22, 12, 'elroe_lower', NULL, 11, 5, 6, 5, 13),
+(8, 'Predator', 'Shadow Bat', 18, 15, 'elroe_upper', NULL, 7, 4, 9, 6, 18),
+(9, 'Prey', 'Weakling Rat', 5, 5, 'elroe_upper', NULL, 3, 2, 1, 2, 8),
+(10, 'Prey', 'Crystalline Snail', 40, 30, 'magma_layer', NULL, 5, 25, 10, 20, 1),
+(11, 'Prey', 'Cave Bat', 8, 8, 'elroe_upper', NULL, 4, 3, 5, 4, 12),
+(12, 'Prey', 'Blind Cave Salamander', 30, 10, 'water_stratum', NULL, 6, 12, 4, 15, 5);
 
 -- --------------------------------------------------------
 
@@ -327,6 +381,29 @@ INSERT INTO `users` (`id`, `email`, `username`, `password_hash`, `role`, `create
 (2, '8amjoker@gmail.com', 'joker', '$2b$10$KdHV2FZUFHeVTBn.F202Gu5UvetTetwIqXSdJVLV5lUXBMYgK95yW', 'player', '2026-04-03 20:38:39'),
 (3, 'admin@admin.com', 'god', '$2b$10$yzahJBWCcGAa76.lFLzvsOquEc3nvk8j/6fw8oWBt5Iq9IVGugExq', 'admin', '2026-04-03 23:13:02'),
 (4, 'oghenesupersam914@gmail.com', 'sam', '$2b$10$qSORTKmr2y/Fst3sskTeZul1G.bscCXuiEoAUJooCZrqVWSp.yJyy', 'player', '2026-04-04 01:42:30');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `zone_spawns`
+--
+
+CREATE TABLE `zone_spawns` (
+  `spawn_id` int(11) NOT NULL,
+  `zone_name` varchar(50) NOT NULL,
+  `npc_id` int(11) NOT NULL,
+  `spawn_chance` int(11) DEFAULT 30
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `zone_spawns`
+--
+
+INSERT INTO `zone_spawns` (`spawn_id`, `zone_name`, `npc_id`, `spawn_chance`) VALUES
+(1, 'elroe_upper', 1, 40),
+(2, 'elroe_upper', 2, 25),
+(3, 'elroe_upper', 3, 10),
+(4, 'magma_layer', 4, 5);
 
 --
 -- Indexes for dumped tables
@@ -366,6 +443,12 @@ ALTER TABLE `duel_challenges`
 --
 ALTER TABLE `evolution_paths`
   ADD PRIMARY KEY (`evolution_id`);
+
+--
+-- Indexes for table `location_connectors`
+--
+ALTER TABLE `location_connectors`
+  ADD PRIMARY KEY (`connector_id`);
 
 --
 -- Indexes for table `location_seeds`
@@ -414,6 +497,13 @@ ALTER TABLE `users`
   ADD UNIQUE KEY `username` (`username`);
 
 --
+-- Indexes for table `zone_spawns`
+--
+ALTER TABLE `zone_spawns`
+  ADD PRIMARY KEY (`spawn_id`),
+  ADD KEY `npc_id` (`npc_id`);
+
+--
 -- AUTO_INCREMENT for dumped tables
 --
 
@@ -421,13 +511,13 @@ ALTER TABLE `users`
 -- AUTO_INCREMENT for table `action_logs`
 --
 ALTER TABLE `action_logs`
-  MODIFY `log_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `log_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
 
 --
 -- AUTO_INCREMENT for table `current_life`
 --
 ALTER TABLE `current_life`
-  MODIFY `life_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
+  MODIFY `life_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- AUTO_INCREMENT for table `duel_actions`
@@ -446,6 +536,12 @@ ALTER TABLE `duel_challenges`
 --
 ALTER TABLE `evolution_paths`
   MODIFY `evolution_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT for table `location_connectors`
+--
+ALTER TABLE `location_connectors`
+  MODIFY `connector_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- AUTO_INCREMENT for table `master_npcs`
@@ -469,13 +565,19 @@ ALTER TABLE `relationships`
 -- AUTO_INCREMENT for table `starting_vessels`
 --
 ALTER TABLE `starting_vessels`
-  MODIFY `vessel_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `vessel_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT for table `users`
 --
 ALTER TABLE `users`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+
+--
+-- AUTO_INCREMENT for table `zone_spawns`
+--
+ALTER TABLE `zone_spawns`
+  MODIFY `spawn_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- Constraints for dumped tables
@@ -518,6 +620,12 @@ ALTER TABLE `relationships`
 --
 ALTER TABLE `soul_library`
   ADD CONSTRAINT `soul_library_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE;
+
+--
+-- Constraints for table `zone_spawns`
+--
+ALTER TABLE `zone_spawns`
+  ADD CONSTRAINT `zone_spawns_ibfk_1` FOREIGN KEY (`npc_id`) REFERENCES `master_npcs` (`id`) ON DELETE CASCADE;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
