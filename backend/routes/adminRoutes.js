@@ -72,23 +72,30 @@ router.post('/npcs/update/:id', upload.single('image'), async (req, res) => {
     }
 });
 
+
 // ==========================================
-// --- SECTION 2: LOCATION ZONES ---
+// --- SECTION 2: LOCATION & WORLD SEEDS ---
 // ==========================================
 
-// [GET ALL LOCATIONS]
+// [GET ALL LOCATIONS] - Now includes Region and Depth info
 router.get('/locations', async (req, res) => {
     try {
-        const [rows] = await db.execute('SELECT * FROM location_seeds ORDER BY location_id DESC');
+        const [rows] = await db.execute('SELECT * FROM location_seeds ORDER BY region_name, level_depth ASC');
         res.json({ system_status: "SYNCHRONIZED", location_seeds: rows });
     } catch (err) {
         res.status(500).json({ error: "Failed to retrieve World Map." });
     }
 });
 
-// [ADD NEW LOCATION]
+// [ADD NEW LOCATION] - Manifesting a new zone with Regional data
 router.post('/locations/add', upload.single('image'), async (req, res) => {
-    const { location_name, description_seed, danger_level, pos_x, pos_y } = req.body;
+    const { 
+        location_id, 
+        description_seed, 
+        danger_level, 
+        region_name, 
+        level_depth 
+    } = req.body;
 
     try {
         let imageUrl = null;
@@ -96,14 +103,16 @@ router.post('/locations/add', upload.single('image'), async (req, res) => {
             imageUrl = `${getDynamicUrl(req)}/uploads/${req.file.filename}`;
         }
 
-        const [result] = await db.execute(
-            'INSERT INTO location_seeds (location_name, description_seed, danger_level, pos_x, pos_y, location_image) VALUES (?, ?, ?, ?, ?, ?)',
-            [location_name, description_seed, danger_level, pos_x, pos_y, imageUrl]
+        await db.execute(
+            `INSERT INTO location_seeds 
+            (location_id, description_seed, danger_level, region_name, level_depth, location_image) 
+            VALUES (?, ?, ?, ?, ?, ?)`,
+            [location_id, description_seed, danger_level, region_name || 'elroe_labyrinth', level_depth || 0, imageUrl]
         );
 
         res.json({ 
-            message: `[SYSTEM: STABILIZED] Zone '${location_name}' manifested.`,
-            location_id: result.insertId,
+            message: `[SYSTEM: STABILIZED] Zone '${location_id}' manifested in region '${region_name}'.`,
+            location_id,
             location_image: imageUrl
         });
     } catch (err) {
@@ -112,10 +121,10 @@ router.post('/locations/add', upload.single('image'), async (req, res) => {
     }
 });
 
-// [UPDATE LOCATION]
+// [UPDATE LOCATION] - Reconfiguring an existing floor
 router.post('/locations/update/:id', upload.single('image'), async (req, res) => {
     const locId = req.params.id;
-    const { location_name, description_seed, danger_level, pos_x, pos_y } = req.body;
+    const { description_seed, danger_level, region_name, level_depth } = req.body;
 
     try {
         const [current] = await db.execute('SELECT location_image FROM location_seeds WHERE location_id = ?', [locId]);
@@ -127,13 +136,115 @@ router.post('/locations/update/:id', upload.single('image'), async (req, res) =>
         }
 
         await db.execute(
-            'UPDATE location_seeds SET location_name = ?, description_seed = ?, danger_level = ?, pos_x = ?, pos_y = ?, location_image = ? WHERE location_id = ?',
-            [location_name, description_seed, danger_level, pos_x, pos_y, imageUrl, locId]
+            `UPDATE location_seeds SET 
+            description_seed = ?, danger_level = ?, region_name = ?, level_depth = ?, location_image = ? 
+            WHERE location_id = ?`,
+            [description_seed, danger_level, region_name, level_depth, imageUrl, locId]
         );
 
-        res.json({ message: `[SYSTEM: RECONFIGURED] Zone '${location_name}' updated.` });
+        res.json({ message: `[SYSTEM: RECONFIGURED] Zone '${locId}' updated.` });
     } catch (err) {
         res.status(500).json({ error: "Map update failure." });
+    }
+});
+
+// ==========================================
+// --- SECTION 2.5: LOCATION CONNECTORS ---
+// ==========================================
+// This is the "Wire" management to connect Floors
+
+// [GET ALL CONNECTORS]
+router.get('/connectors', async (req, res) => {
+    try {
+        const [rows] = await db.execute('SELECT * FROM location_connectors');
+        res.json({ system_status: "SYNCHRONIZED", world_paths: rows });
+    } catch (err) {
+        res.status(500).json({ error: "Failed to retrieve World Connectors." });
+    }
+});
+
+// [ADD CONNECTOR] - Manifesting paths with Duplicate Protection
+router.post('/connectors/add', async (req, res) => {
+    const { from_location, to_location, direction, min_level_req } = req.body;
+
+    const validDirections = ['UP', 'DOWN', 'NORTH', 'SOUTH', 'EAST', 'WEST', 'LEFT', 'RIGHT'];
+    const dir = direction ? direction.toUpperCase() : null;
+
+    if (!dir || !validDirections.includes(dir)) {
+        return res.status(400).json({ error: `Invalid direction. Use: ${validDirections.join(', ')}` });
+    }
+
+    try {
+        // --- 1. DUPLICATE CHECK ---
+        const [existing] = await db.execute(
+            'SELECT * FROM location_connectors WHERE from_location = ? AND direction = ?',
+            [from_location, dir]
+        );
+
+        if (existing.length > 0) {
+            return res.status(400).json({ 
+                error: `[SYSTEM ERROR]: A path going ${dir} already exists for ${from_location}.` 
+            });
+        }
+
+        // --- 2. INSERT IF UNIQUE ---
+        const [result] = await db.execute(
+            'INSERT INTO location_connectors (from_location, to_location, direction, min_level_req) VALUES (?, ?, ?, ?)',
+            [from_location, to_location, dir, min_level_req || 1]
+        );
+
+        res.json({ 
+            message: `[SYSTEM: LINKED] Path manifested: ${from_location} --[${dir}]--> ${to_location}`,
+            connector_id: result.insertId 
+        });
+
+    } catch (err) {
+        console.error("CONNECTOR_ERROR:", err);
+        // Catching the SQL Unique constraint just in case the JS check misses it
+        if (err.code === 'ER_DUP_ENTRY') {
+            return res.status(400).json({ error: "This path configuration already exists in the database." });
+        }
+        res.status(500).json({ error: "Path link failure. System instability detected." });
+    }
+});
+
+// [DELETE CONNECTOR] - Removing a path/collapsing a tunnel
+router.delete('/connectors/delete/:id', async (req, res) => {
+    const connectorId = req.params.id;
+    try {
+        await db.execute('DELETE FROM location_connectors WHERE connector_id = ?', [connectorId]);
+        res.json({ message: `[SYSTEM: COLLAPSED] Path ID: ${connectorId} removed.` });
+    } catch (err) {
+        res.status(500).json({ error: "Path removal failure." });
+    }
+});
+
+// [GET] Sorted World Map to see your 0, 0, 3 layout clearly
+router.get('/world-map/structure', async (req, res) => {
+    try {
+        const [rows] = await db.execute(`
+            SELECT location_id, region_name, level_depth, danger_level 
+            FROM location_seeds 
+            ORDER BY level_depth ASC, danger_level DESC
+        `);
+        // This will show your two '0' depth floors first, then the '3' depth floor
+        res.json({ map_layout: rows });
+    } catch (err) {
+        res.status(500).json({ error: "Failed to render map structure." });
+    }
+});
+
+// [POST] Create the "Jump" Connector
+router.post('/connectors/shortcut', async (req, res) => {
+    const { from_0, to_3 } = req.body; // e.g., 'elroe_upper' to 'deep_abyss'
+    try {
+        await db.execute(
+            'INSERT INTO location_connectors (from_location, to_location, direction, min_level_req) VALUES (?, ?, "DOWN", 10)',
+            [from_0, to_3]
+        );
+        res.json({ message: "[SYSTEM: VOID LINKED] A direct path from Depth 0 to Depth 3 has been manifested." });
+    } catch (err) {
+        res.status(500).json({ error: "Failed to create shortcut." });
     }
 });
 

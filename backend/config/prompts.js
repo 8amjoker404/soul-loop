@@ -1,3 +1,4 @@
+// backend/config/prompts.js
 module.exports = {
     // Notice we added 'worldLore' as the 4th parameter
     buildSystemPrompt: (player, location, action, worldLore) => {

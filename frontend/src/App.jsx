@@ -7,6 +7,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import AdminRoute from "./components/auth/AdminRoute";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import styles from "./App.module.css";
+import AdminLocations from "./pages/admin/AdminLocations";
 
 function App() {
   return (
@@ -59,6 +60,14 @@ function App() {
             element={
               <AdminRoute>
                 <AdminDashboard />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/admin/locations"
+            element={
+              <AdminRoute>
+                <AdminLocations />
               </AdminRoute>
             }
           />

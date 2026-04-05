@@ -1,43 +1,70 @@
-/* index.css */
-html, body, #root {
-  height: 100%;
+html,
+body,
+#root {
+  min-height: 100%;
   width: 100%;
   margin: 0;
   padding: 0;
-  background: #030611; /* deep dark base */
-  /* Prevent any scrolling on the main axis */
-  overflow: hidden; 
-  /* Standardizes touch behavior for mobile */
-  touch-action: none; 
+  background: #030611;
 }
 
+html,
 body {
-  /* Ensuring no horizontal or vertical bleed */
-  overflow: hidden;
-  position: fixed;
-  width: 100%;
-  height: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  touch-action: auto;
 }
 
 #root {
-  display: flex;
-  flex-direction: column;
-  height: 100%; /* Ensure root takes full height */
   width: 100%;
+  min-height: 100vh;
+  display: block;
 }
 
-/* Updated .app to be a rigid container */
 .app {
   width: 100%;
-  height: 100%; /* Changed from min-height: 100vh to height: 100% */
-  overflow: hidden; /* Lock internal app scrolling */
-  display: flex;
-  flex-direction: column;
+  min-height: 100vh;
+  display: block;
 }
 
-/* Optional: Smooth transitions if you switch between auth pages */
-* {
+/* Glass Toast Styling */
+.glassToast {
+  background: rgba(12, 18, 38, 0.45) !important;
+  backdrop-filter: blur(12px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(12px) saturate(180%) !important;
+  border: 1px solid rgba(105, 149, 255, 0.2) !important;
+  border-radius: 16px !important;
+  padding: 12px 20px !important;
+  color: #d2e9ff !important;
+  font-family: "Trebuchet MS", "Segoe UI", sans-serif !important;
+  font-size: 0.9rem !important;
+  letter-spacing: 0.05em !important;
+  box-shadow:
+    0 8px 32px 0 rgba(0, 0, 0, 0.8),
+    0 0 15px rgba(72, 112, 255, 0.1) !important;
+  animation: toastEntrance 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+}
+
+@keyframes toastEntrance {
+  from {
+    transform: translateX(100%) scale(0.9);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0) scale(1);
+    opacity: 1;
+  }
+}
+
+.glassToast b {
+  color: #fff;
+  text-shadow: 0 0 8px rgba(139, 188, 255, 0.4);
+}
+
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }

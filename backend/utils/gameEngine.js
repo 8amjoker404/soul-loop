@@ -1,50 +1,55 @@
-// utils/gameEngine.js
+/**
+ * gameEngine.js
+ * Integrated with Survival Vitals (Hunger/SP)
+ */
 
 const calculateCombat = (player, monster) => {
-    // Basic RPG Math: (Atk * Level) - (Def / 2)
-    const rawDamage = (player.offense * player.current_level) - (monster.defense / 2);
+    // 1. Apply Starvation Debuff (50% power if starving)
+    const hungerFactor = (player.hunger <= 0) ? 0.5 : 1.0;
+    
+    // 2. Base RPG Math
+    const rawDamage = ((player.offense * player.current_level) - (monster.base_defense / 2)) * hungerFactor;
     const damageDealt = Math.max(1, Math.floor(rawDamage));
     
-    // Check if player kills the monster
-    const isMonsterDead = (monster.hp - damageDealt) <= 0;
+    // 3. Check Monster Status
+    const isMonsterDead = (monster.base_hp - damageDealt) <= 0;
     
-    // XP Reward based on Danger Rank
-    const rankXP = { 'F': 10, 'E': 25, 'D': 50, 'C': 100, 'B': 250, 'A': 500, 'S': 1000 };
-    const xpGained = isMonsterDead ? (rankXP[monster.danger_rank] || 10) : 5;
+    // 4. Survival Costs (Combat is exhausting)
+    const combatSpCost = 15;
+    const combatHungerCost = 8;
 
-    return { damageDealt, isMonsterDead, xpGained };
+    // 5. XP Reward based on Danger Rank
+    const rankXP = { 'F': 20, 'E': 50, 'D': 100, 'C': 250, 'B': 500, 'A': 1000, 'S': 5000 };
+    const xpGained = isMonsterDead ? (rankXP[monster.danger_rank] || 20) : 5;
+
+    return { 
+        damageDealt, 
+        isMonsterDead, 
+        xpGained, 
+        spCost: combatSpCost, 
+        hungerCost: combatHungerCost,
+        monsterRemainingHp: Math.max(0, monster.base_hp - damageDealt)
+    };
 };
 
 const processLevelUp = (player) => {
-    let { current_level, max_hp, max_mp, offense, defense, speed, next_level_xp } = player;
-    
-    let leveledUp = false;
-    let log = "";
+    if (player.xp >= player.next_level_xp) {
+        const newLevel = player.current_level + 1;
+        const hpGain = 15;
+        const mpGain = 10;
+        const statGain = 3;
 
-    if (player.xp >= next_level_xp) {
-        leveledUp = true;
-        current_level += 1;
-        
-        // Scale next "Mark" (100 -> 250 -> 562 -> 1265)
-        const newNextXp = Math.floor(next_level_xp * 2.5);
-        
-        // Stat Growth
-        const hpGain = 10;
-        const mpGain = 5;
-        const statGain = 2;
-
-        log = `[LEVEL UP]: Reached Level ${current_level}. HP+${hpGain}, MP+${mpGain}, Stats increased.`;
-        
         return {
-            current_level,
-            max_hp: max_hp + hpGain,
-            max_mp: max_mp + mpGain,
-            offense: offense + statGain,
-            defense: defense + statGain,
-            speed: speed + statGain,
-            next_level_xp: newNextXp,
-            leveledUp,
-            log
+            leveledUp: true,
+            current_level: newLevel,
+            max_hp: player.max_hp + hpGain,
+            hp: player.max_hp + hpGain, // Full heal on level up
+            max_mp: player.max_mp + mpGain,
+            offense: player.offense + statGain,
+            defense: player.defense + statGain,
+            speed: player.speed + statGain,
+            next_level_xp: Math.floor(player.next_level_xp * 2.5),
+            systemLog: `[SYSTEM_EVOLUTION]: Leveled to ${newLevel}. Strength grows.`
         };
     }
     return { leveledUp: false };
