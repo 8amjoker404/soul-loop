@@ -1,3 +1,4 @@
+// backend/routes/gameRoutes.js
 const express = require('express');
 const router = express.Router();
 const db = require('../config/db');
@@ -6,7 +7,8 @@ const { buildSystemPrompt } = require('../config/prompts');
 const { verifyToken } = require('../middleware/auth');
 const { handleAdminCheat } = require('../utils/cheatEngine');
 const { scanWorldContext } = require('../utils/worldEngine');
-const { calculateCombat, processLevelUp } = require('../utils/gameEngine');
+const { processLevelUp } = require('../utils/gameEngine');
+const { resolveCombatEncounter } = require('../utils/combatEncounterEngine');
 const { performIsekaiBirth } = require('../utils/reincarnationEngine');
 const { calculateSurvivalCost } = require('../utils/survivalEngine');
 
@@ -14,14 +16,14 @@ const { calculateSurvivalCost } = require('../utils/survivalEngine');
 router.use(verifyToken);
 
 // ==========================================
-// ROUTE 1: GET CURRENT STATUS (CLEAN VERSION)
+// ROUTE 1: //api/game/status - Fetch current player state, recent history, and available choices
 // ==========================================
 router.get('/status', async (req, res) => {
     const userId = req.user.userId;
 
     try {
         const [playerRows] = await db.execute(`
-            SELECT c.*, u.username, s.permanent_skills 
+            SELECT c.*, u.username, u.system_voice, s.permanent_skills 
             FROM current_life c 
             JOIN users u ON c.user_id = u.id 
             JOIN soul_library s ON c.user_id = s.user_id 
@@ -32,7 +34,6 @@ router.get('/status', async (req, res) => {
         if (!playerRows.length) return res.status(404).json({ error: "No active life found." });
         const player = playerRows[0];
 
-        // Fetch logs with Visuals
         const [logRows] = await db.execute(`
             SELECT user_action, system_response, choices, bg_image, encounter_image 
             FROM action_logs 
@@ -62,7 +63,7 @@ router.get('/status', async (req, res) => {
     }
 });
 // ==========================================
-// ROUTE: GET AI-GENERATED SOUL SCAN
+// ROUTE: //api/game/reincarnate - Handles the entire reincarnation process based on AI judgment of the soul scan answers
 // ==========================================
 router.get('/reincarnate/questions', async (req, res) => {
     try {
@@ -100,11 +101,10 @@ router.get('/reincarnate/questions', async (req, res) => {
 });
 
 // ==========================================
-// ROUTE: THE SYSTEM JUDGMENT & BIRTH
+// ROUTE: //api/game/reincarnate - Handles the entire reincarnation process based on AI judgment of the soul scan answers
 // ==========================================
 router.post('/reincarnate', async (req, res) => {
     const userId = req.user?.userId;
-    // We now focus purely on the results of the Soul Scan questions
     const { answers } = req.body;
 
     try {
@@ -112,8 +112,6 @@ router.post('/reincarnate', async (req, res) => {
             return res.status(400).json({ error: "Soul records incomplete. Neural sync failed." });
         }
 
-        // 1. AI BLUEPRINT GENERATION
-        // The AI analyzes the 3 answers to determine Path, Species, Location, and Stats
         const blueprintPrompt = `
             [SYSTEM ANALYSIS: SOUL SCAN RESULTS]
             The subject has provided the following responses to the psychological scan:
@@ -136,15 +134,10 @@ router.post('/reincarnate', async (req, res) => {
         const bpResult = await model.generateContent(blueprintPrompt);
         const blueprint = JSON.parse(bpResult.response.text().trim().replace(/```json|```/g, ''));
 
-        // 2. TRIGGER DYNAMIC BIRTH UTILITY
-        // Passes the AI's determined blueprint into the engine
         const vessel = await performIsekaiBirth(userId, blueprint.path, blueprint);
 
-        // 3. DATABASE: RESET PREVIOUS STATE
         await db.execute('UPDATE current_life SET is_alive = 0 WHERE user_id = ?', [userId]);
 
-        // 4. DATABASE: BIRTH NEW VESSEL
-        // Uses the AI-defined stats from the blueprint
         const [insertResult] = await db.execute(
             `INSERT INTO current_life (
                 user_id, species, vessel_type, current_location, 
@@ -158,8 +151,8 @@ router.post('/reincarnate', async (req, res) => {
                 vessel.starting_location,
                 vessel.base_hp, vessel.base_hp, 
                 vessel.base_mp, vessel.base_mp, 
-                100, // Hunger starts full
-                vessel.base_sp, vessel.base_sp, // Stamina
+                100,
+                vessel.base_sp, vessel.base_sp,
                 vessel.base_offense, 
                 vessel.base_defense, 
                 vessel.base_speed
@@ -168,8 +161,12 @@ router.post('/reincarnate', async (req, res) => {
 
         const newLifeId = insertResult.insertId;
 
-        // 5. NARRATIVE AWAKENING
-        // Uses buildSystemPrompt to describe the transition based on the quiz answers
+        const [userRows] = await db.execute(
+            'SELECT system_voice FROM users WHERE id = ?',
+            [userId]
+        );
+        const systemVoice = userRows[0]?.system_voice || 'ADMIN';
+
         const aiPrompt = buildSystemPrompt(
             { 
                 ...vessel, 
@@ -178,7 +175,8 @@ router.post('/reincarnate', async (req, res) => {
                 hunger: 100, 
                 sp: vessel.base_sp, 
                 current_level: 1, 
-                vessel_type: blueprint.path 
+                vessel_type: blueprint.path,
+                system_voice: systemVoice
             },
             { description_seed: vessel.starting_location },
             `Soul Scan Completed. Identity Confirmed.`,
@@ -191,7 +189,6 @@ router.post('/reincarnate', async (req, res) => {
         const cleanStory = aiResponse.replace(/\[.*?\]/g, '').trim();
         const choices = [...aiResponse.matchAll(/\[CHOICE_\d+:\s*(.*?)\]/g)].map(m => m[1]);
 
-        // 6. SAVE LOG & RESPOND
         await db.execute(
             `INSERT INTO action_logs (life_id, user_action, system_response, choices) VALUES (?, ?, ?, ?)`,
             [newLifeId, 'System Judgment Awakening', cleanStory, JSON.stringify(choices)]
@@ -239,9 +236,8 @@ router.post('/action', async (req, res) => {
         }
 
         // --- 1. FETCH PLAYER STATE ---
-        // Includes Hunger, SP, and Vessel_Type from the updated SQL schema
         const [playerRows] = await db.execute(`
-            SELECT c.*, u.username, s.permanent_skills 
+            SELECT c.*, u.username, u.system_voice, s.permanent_skills 
             FROM current_life c 
             JOIN users u ON c.user_id = u.id 
             JOIN soul_library s ON c.user_id = s.user_id 
@@ -255,11 +251,10 @@ router.post('/action', async (req, res) => {
         let player = playerRows[0];
 
         // --- 2. SURVIVAL CALCULATIONS ---
-        // This calculates the metabolic cost of the action before combat/world logic
         const survival = calculateSurvivalCost(player, normalizedAction);
         player.hunger = survival.hunger;
         player.sp = survival.sp;
-        player.hp -= survival.healthPenalty; // Apply starvation damage if applicable
+        player.hp -= survival.healthPenalty; 
 
         // --- 3. CHEAT ENGINE CHECK ---
         const cheatCheck = await handleAdminCheat(normalizedAction, player, userId);
@@ -267,38 +262,26 @@ router.post('/action', async (req, res) => {
             return res.json(cheatCheck.response);
         }
 
-        // --- 4. WORLD ENGINE SCAN ---
+        // --- 4. WORLD ENGINE SCAN (Filtering out Player Context) ---
         const worldData = await scanWorldContext(player, userId);
 
-        // --- 5. COMBAT ENGINE LOGIC ---
-        let engineNotice = survival.statusNotice || ""; // Start notice with survival alerts
+        // --- 5. COMBAT ENGINE LOGIC (Persistent Encounters) ---
+        let engineNotice = survival.statusNotice || "";
         let monsterContext = "";
         let monsterButtons = [];
         let monsterImageUrl = null;
 
-        const [spawns] = await db.execute(`
-            SELECT m.* FROM zone_spawns z 
-            JOIN master_npcs m ON z.npc_id = m.id 
-            WHERE z.zone_name = ? AND RAND() * 100 <= z.spawn_chance 
-            LIMIT 1
-        `, [player.current_location]);
+        const combatData = await resolveCombatEncounter({
+            player,
+            action: normalizedAction,
+            engineNotice
+        });
 
-        if (spawns.length > 0) {
-            const m = spawns[0];
-            monsterImageUrl = m.npc_image || null;
-
-            if (normalizedAction.startsWith("Attack the")) {
-                const result = calculateCombat(player, m);
-                player.xp += Number(result.xpGained || 0);
-
-                engineNotice += ` [ENGINE_COMBAT]: Dealt ${result.damageDealt} DMG. ${
-                    result.isMonsterDead ? 'Slain.' : 'Survived.'
-                } Gained ${result.xpGained} XP.`;
-            } else {
-                monsterContext = `[ENCOUNTER: WILD ${m.name} (${m.danger_rank})]. ${m.description}. `;
-                monsterButtons.push(`Attack the ${m.name}`);
-            }
-        }
+        player = combatData.player;
+        engineNotice = combatData.engineNotice;
+        monsterContext = combatData.monsterContext;
+        monsterButtons = combatData.monsterButtons;
+        monsterImageUrl = combatData.monsterImageUrl;
 
         // --- 6. LEVEL ENGINE ---
         const levelData = processLevelUp(player);
@@ -314,10 +297,12 @@ router.post('/action', async (req, res) => {
         );
 
         const backgroundUrl = locRows.length > 0 ? locRows[0].location_image : null;
-        const fullContext = `${worldData.pvpContext || ""}${monsterContext}${worldData.worldLore || ""}${engineNotice}`;
+        
+        // REMOVED worldData.pvpContext to ensure other players are not mentioned
+        const fullContext = `${monsterContext}${worldData.worldLore || ""}${engineNotice}`;
 
         const aiPrompt = buildSystemPrompt(
-            player, // AI now has access to player.hunger and player.sp
+            player, 
             { description_seed: player.current_location },
             normalizedAction,
             fullContext
@@ -338,11 +323,12 @@ router.post('/action', async (req, res) => {
             finalHp = 0;
         }
 
-        // Parse Choices
+        // Parse AI Choices
         const aiChoices = [...aiResponse.matchAll(/\[CHOICE_\d+:\s*(.*?)\]/g)]
             .map(m => m[1]).filter(Boolean).map(choice => String(choice).trim());
 
-        const allChoices = [...(worldData?.pvpButtons || []), ...monsterButtons, ...aiChoices]
+        // REMOVED worldData.pvpButtons to prevent "Challenge Player" options
+        const allChoices = [...monsterButtons, ...aiChoices]
             .filter(Boolean).map(choice => String(choice).trim());
 
         const uniqueChoices = [...new Set(allChoices)];
@@ -353,7 +339,7 @@ router.post('/action', async (req, res) => {
 
         const finalChoices = uniqueChoices.slice(0, 4);
 
-        // --- 9. SAVE UPDATED STATS (Including Hunger and SP) ---
+        // --- 9. SAVE UPDATED STATS ---
         const updateLifeParams = [
             finalHp,
             Number(player.xp || 0),
@@ -362,8 +348,8 @@ router.post('/action', async (req, res) => {
             Number(player.next_level_xp || 100),
             Number(player.offense || 1),
             Number(player.defense || 1),
-            Number(player.hunger), // Added Hunger
-            Number(player.sp),     // Added SP
+            Number(player.hunger),
+            Number(player.sp),
             isAlive ? 1 : 0,
             player.life_id
         ];
@@ -407,7 +393,6 @@ router.post('/action', async (req, res) => {
         return res.status(500).json({ error: "System Error.", details: err.message });
     }
 });
-
 
 
 module.exports = router;

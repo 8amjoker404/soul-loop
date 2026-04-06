@@ -4,13 +4,6 @@ const db = require('../config/db');
 const handleAdminCheat = async (action, player, userId) => {
     const normalizedAction = String(action || '').trim().toLowerCase();
 
-    console.log("CHEAT ENGINE INPUT:", {
-        rawAction: action,
-        normalizedAction,
-        playerLifeId: player?.life_id,
-        userId
-    });
-
     if (!normalizedAction) {
         return { isCheat: false };
     }
