@@ -1,5 +1,6 @@
 const db = require('../config/db');
 const { calculateCombat } = require('./gameEngine');
+const { clampSp, clampHunger, isAggressiveAction } = require('./survivalEngine');
 
 const getCounterDamage = (monster, player) => {
     const enemyAtk = Number(monster.base_offense || monster.base_attack || 5);
@@ -64,9 +65,22 @@ const resolveCombatEncounter = async ({ player, action, engineNotice = "" }) => 
     let monsterButtons = [];
     let monsterImageUrl = null;
 
+    const actionLower = String(action).toLowerCase();
+
+    const isAggressive = isAggressiveAction(action);
+    const isSkill = actionLower.includes("skill") || actionLower.includes("risky") || actionLower.includes("beast");
+
     const { activeMonster, isNewEncounter } = await loadOrCreateEncounter(player);
 
     if (!activeMonster) {
+        // No encounter: aggressive swings still cost a little SP (combat layer only; survival skipped attack SP)
+        if (isAggressive) {
+            const whiffSp = isSkill ? 12 : 4;
+            const cur = clampSp(player, player.sp);
+            player.sp = clampSp(player, cur - whiffSp);
+            player.hunger = clampHunger(Number(player.hunger || 0) - (isSkill ? 4 : 2));
+            engineNotice += ` [COMBAT_LOG: No target in range. Stamina spent: ${whiffSp} SP.]`;
+        }
         return {
             player,
             engineNotice,
@@ -78,31 +92,26 @@ const resolveCombatEncounter = async ({ player, action, engineNotice = "" }) => 
     }
 
     monsterImageUrl = activeMonster.npc_image || null;
-    const actionLower = String(action).toLowerCase();
-
-    // --- AGGRESSION ARRAY (Fixes the "Risky Action" bug) ---
-    const aggressiveTriggers = ["attack", "skill", "strike", "grapple", "charge", "slash", "hit", "kill", "risky action", "beast"];
-    const isAggressive = aggressiveTriggers.some(word => actionLower.includes(word));
 
     // ==========================================
     // 1. COMBAT ACTION LOGIC (THE FIGHT)
     // ==========================================
     if (isAggressive) {
-        const result = calculateCombat(player, activeMonster);
+        const result = calculateCombat(player, activeMonster, { isSkill });
 
-        // --- SKILL MULTIPLIER ---
         let finalDamage = result.damageDealt;
-        let finalSpCost = result.spCost;
+        const finalSpCost = Number(result.spCost) || 4;
+        const hungerFromCombat = Number(result.hungerCost) || 2;
 
-        if (actionLower.includes("skill") || actionLower.includes("risky") || actionLower.includes("beast")) {
-            finalDamage = Math.floor(finalDamage * 1.5); 
-            finalSpCost = finalSpCost * 2;              
+        if (isSkill) {
+            finalDamage = Math.floor(finalDamage * 1.5);
             engineNotice += ` [SKILL_ACTIVATE: Inner Power channeled!]`;
         }
 
         player.xp = Number(player.xp || 0) + Number(result.xpGained || 0);
-        player.sp = Math.max(0, Number(player.sp || 0) - finalSpCost);
-        player.hunger = Math.max(0, Number(player.hunger || 0) - Number(result.hungerCost || 0));
+        const spAfter = clampSp(player, clampSp(player, player.sp) - finalSpCost);
+        player.sp = spAfter;
+        player.hunger = clampHunger(Number(player.hunger || 0) - hungerFromCombat);
 
         if (finalDamage >= activeMonster.current_hp) {
             // --- VICTORY ---
@@ -153,7 +162,7 @@ const resolveCombatEncounter = async ({ player, action, engineNotice = "" }) => 
         // --- DEFENSIVE STANCE ---
         const counterDamage = Math.floor(getCounterDamage(activeMonster, player) * 0.5);
         player.hp = Math.max(0, Number(player.hp || 0) - counterDamage);
-        player.sp = Math.min(Number(player.max_sp || 100), Number(player.sp || 0) + 5); 
+        player.sp = clampSp(player, clampSp(player, player.sp) + 5);
 
         // --- DEATH CHECK 2 ---
         if (player.hp === 0) {

@@ -2,7 +2,12 @@
  * gameEngine.js - THE "IMPOSSIBLE MODE" UPDATE
  */
 
-const calculateCombat = (player, monster) => {
+const calculateCombat = (player, monster, options = {}) => {
+    const isSkill = !!options.isSkill;
+    // Basic attack: low SP (2–5). Special / skill: moderate (10–15).
+    const spCost = isSkill ? 12 : 4;
+    const hungerCost = isSkill ? 4 : 2;
+
     // 1. DIMINISHING RETURNS (Anti-Farm Logic)
     // If you are way stronger than the prey, your soul doesn't grow from the kill.
     const levelDiff = player.current_level - monster.base_level;
@@ -32,7 +37,9 @@ const calculateCombat = (player, monster) => {
         damageDealt, 
         isMonsterDead, 
         xpGained, 
-        monsterRemainingHp: Math.max(0, monster.base_hp - damageDealt) 
+        monsterRemainingHp: Math.max(0, monster.base_hp - damageDealt),
+        spCost,
+        hungerCost
     };
 };
 

@@ -1,5 +1,10 @@
 // backend/utils/gameAction/savePlayerState.js
+const { clampSp, clampHunger } = require('../survivalEngine');
+
 async function saveUpdatedPlayerState({ db, player, finalHp, isAlive }) {
+    const safeSp = clampSp(player, player.sp);
+    const safeHunger = clampHunger(player.hunger);
+
     const updateLifeParams = [
         finalHp,
         Number(player.xp || 0),
@@ -8,8 +13,8 @@ async function saveUpdatedPlayerState({ db, player, finalHp, isAlive }) {
         Number(player.next_level_xp || 100),
         Number(player.offense || 1),
         Number(player.defense || 1),
-        Number(player.hunger || 0),
-        Number(player.sp || 0),
+        safeHunger,
+        safeSp,
         player.current_location,
         isAlive ? 1 : 0,
         player.inventory,

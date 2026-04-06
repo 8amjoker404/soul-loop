@@ -70,17 +70,13 @@ const parseSurvivalAction = (player, actionText, engineNotice) => {
         }
     }
 
-    // -- REST / SLEEP --
-    else if (text.includes('rest') || text.includes('sleep') || text.includes('nap')) {
-        player.sp = Number(player.max_sp); // Max out Stamina
-        player.hp = Math.min(Number(player.max_hp), Number(player.hp) + 15);
-        
-        // If they are sleeping at their home base, heal more!
+    // -- REST / SLEEP (SP + hunger: survivalEngine; avoid duplicating full heals here) --
+    else if (text.includes('rest') || text.includes('sleep') || text.includes('nap')
+        || text.includes('wait') || text.includes('catch breath') || text.includes('breather')) {
         if (player.current_location === player.home_base) {
-            player.hp = player.max_hp;
-            engineNotice += ` [SYSTEM_EVENT: Slept safely at Home Base. HP and SP fully restored.]`;
+            engineNotice += ` [SYSTEM_EVENT: Safe haven. The noise of the labyrinth fades.]`;
         } else {
-            engineNotice += ` [SYSTEM_EVENT: Rested in the wild. SP fully restored. HP partially recovered. Vulnerable to ambush.]`;
+            engineNotice += ` [SYSTEM_EVENT: You settle in; the wild offers no guarantees.]`;
         }
     }
 

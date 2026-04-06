@@ -3,13 +3,15 @@ const { handleAdminCheat } = require('../cheatEngine');
 const { scanWorldContext } = require('../worldEngine');
 const { processLevelUp } = require('../gameEngine');
 const { resolveCombatEncounter } = require('../combatEncounterEngine');
-const { calculateSurvivalCost } = require('../survivalEngine');
+const { calculateSurvivalCost, isAggressiveAction } = require('../survivalEngine');
 const { parseSurvivalAction } = require('../actionParser');
 const { handleZoneTravel } = require('../travelEngine');
 
 async function applyActionFlow({ player, userId, action, db }) {
-    // --- 1. SURVIVAL CALCULATIONS ---
-    const survival = calculateSurvivalCost(player, action);
+    // --- 1. SURVIVAL CALCULATIONS (combat handles SP for attacks/skills — no double-dip) ---
+    const survival = calculateSurvivalCost(player, action, {
+        aggressiveCombatStamina: isAggressiveAction(action)
+    });
     player.hunger = survival.hunger;
     player.sp = survival.sp;
     player.hp -= survival.healthPenalty;

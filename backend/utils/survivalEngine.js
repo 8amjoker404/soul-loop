@@ -1,59 +1,124 @@
 /**
- * survivalEngine.js - Enhanced with Travel Costs
+ * survivalEngine.js — SP / hunger with combat override + rest recovery
  */
 
-const calculateSurvivalCost = (player, action) => {
-    let hungerCost = 2; // Base activity cost
-    let spCost = 5;     // Base activity cost
+const DEFAULT_MAX_SP = 100;
 
-    const normalizedAction = action.toLowerCase();
+function normalizeNumber(value, fallback = 0) {
+    const n = Number(value);
+    return Number.isFinite(n) ? n : fallback;
+}
 
-    // --- 1. CONTEXT-SPECIFIC COSTS ---
-    if (normalizedAction.includes('travel') || normalizedAction.includes('move to')) {
-        // Traveling across zones is exhausting
-        // Dwarves/Predators might have different modifiers
-        hungerCost = 15; 
-        
-        // SPD Penalty: Lower Speed makes travel cost MORE Stamina
-        const spdModifier = Math.max(1, 20 / (player.speed || 1)); 
-        spCost = 20 * spdModifier; 
+function clampSp(player, sp) {
+    const maxSp = normalizeNumber(player.max_sp, DEFAULT_MAX_SP);
+    let s = normalizeNumber(sp, maxSp);
+    if (!Number.isFinite(s)) s = 0;
+    return Math.max(0, Math.min(maxSp, Math.floor(s)));
+}
 
-    } else if (normalizedAction.includes('attack')) {
-        hungerCost = 8;
-        spCost = 15;
-    } else if (normalizedAction.includes('rest')) {
-        hungerCost = 1;
-        spCost = -25; // Restore SP
-    } else if (normalizedAction.includes('eat')) {
-        hungerCost = -40; // Restore Hunger (Significant)
-        spCost = 5;
+function clampHunger(h) {
+    let x = normalizeNumber(h, 50);
+    if (!Number.isFinite(x)) x = 50;
+    return Math.max(0, Math.min(100, Math.floor(x)));
+}
+
+/** Same semantics as combatEncounterEngine aggressive triggers (keep in sync). */
+const AGGRESSIVE_TRIGGERS = [
+    'attack', 'skill', 'strike', 'grapple', 'charge', 'slash', 'hit', 'kill',
+    'risky action', 'beast'
+];
+
+function isAggressiveAction(action) {
+    const a = String(action || '').toLowerCase();
+    return AGGRESSIVE_TRIGGERS.some((word) => a.includes(word));
+}
+
+const REST_TRIGGERS = [
+    'rest', 'sleep', 'nap', 'wait', 'pause', 'catch breath', 'catching breath',
+    'catch my breath', 'breather', 'take a breather', 'sit down', 'sit and',
+    'recuperate', 'recover', 'recover stamina', 'catch your breath', 'lie down',
+    'camp', 'make camp'
+];
+
+function isRestAction(action) {
+    const a = String(action || '').toLowerCase();
+    return REST_TRIGGERS.some((phrase) => a.includes(phrase));
+}
+
+/**
+ * @param {object} player
+ * @param {string} action
+ * @param {{ aggressiveCombatStamina?: boolean }} [options]
+ *   If true, combatEncounterEngine will apply attack/skill SP — survival does not tax SP for this turn.
+ */
+const calculateSurvivalCost = (player, action, options = {}) => {
+    const aggressiveCombatStamina = !!options.aggressiveCombatStamina;
+
+    let hungerDelta = 2; // positive = drain hunger
+    let spDelta = 5;     // positive = drain SP
+
+    const normalizedAction = String(action || '').toLowerCase();
+
+    // --- REST: restore SP, slight hunger cost ---
+    if (isRestAction(action)) {
+        hungerDelta = 3;
+        spDelta = -20; // restore 20 SP
+    }
+    // --- TRAVEL (heavy) ---
+    else if (normalizedAction.includes('travel') || normalizedAction.includes('move to')) {
+        hungerDelta = 15;
+        const spdModifier = Math.max(1, 20 / Math.max(1, normalizeNumber(player.speed, 1)));
+        spDelta = Math.min(40, 20 * spdModifier);
+    }
+    // --- EAT (not rest) ---
+    else if (normalizedAction.includes('eat')) {
+        hungerDelta = -40;
+        spDelta = 5;
+    }
+    // --- AGGRESSION: combat layer owns SP for attacks/skills ---
+    else if (aggressiveCombatStamina || normalizedAction.includes('attack')) {
+        hungerDelta = 8;
+        spDelta = 0;
     }
 
-    // --- 2. VESSEL MODIFIERS ---
-    if (player.vessel_type === 'Predator') hungerCost *= 1.3;
-    if (player.vessel_type === 'Scavenger') hungerCost *= 0.8; // Scavengers are efficient
+    // --- VESSEL MODIFIERS (hunger only) ---
+    if (player.vessel_type === 'Predator') hungerDelta *= 1.3;
+    if (player.vessel_type === 'Scavenger') hungerDelta *= 0.8;
 
-    // --- 3. APPLY CALCULATIONS ---
-    const newHunger = Math.max(0, Math.min(100, player.hunger - hungerCost));
-    const newSP = Math.max(0, Math.min(player.max_sp, player.sp - spCost));
+    hungerDelta = Math.round(hungerDelta);
 
-    let statusNotice = "";
+    const startHunger = clampHunger(player.hunger);
+    const startSp = clampSp(player, player.sp);
+
+    const newHunger = clampHunger(startHunger - hungerDelta);
+    const newSP = clampSp(player, startSp - spDelta);
+
+    let statusNotice = '';
     let healthPenalty = 0;
 
     if (newHunger <= 0) {
-        statusNotice += "[SYSTEM: STARVATION DETECTED. HP REDUCED.] ";
+        statusNotice += '[SYSTEM: STARVATION DETECTED. HP REDUCED.] ';
         healthPenalty = 5;
     }
-    if (newSP <= 0) {
-        statusNotice += "[SYSTEM: EXHAUSTION DETECTED. ACTION EFFICIENCY DROPPED.] ";
+    if (newSP <= 0 && spDelta > 0) {
+        statusNotice += '[SYSTEM: EXHAUSTION DETECTED. ACTION EFFICIENCY DROPPED.] ';
+    }
+    if (isRestAction(action) && spDelta < 0) {
+        statusNotice += '[SYSTEM: STAMINA RECOVERY. Breathing stabilized.] ';
     }
 
     return {
-        hunger: Math.floor(newHunger),
-        sp: Math.floor(newSP),
+        hunger: newHunger,
+        sp: newSP,
         healthPenalty,
         statusNotice
     };
 };
 
-module.exports = { calculateSurvivalCost };
+module.exports = {
+    calculateSurvivalCost,
+    isAggressiveAction,
+    isRestAction,
+    clampSp,
+    clampHunger
+};
