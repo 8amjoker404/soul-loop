@@ -9,7 +9,13 @@ function shuffleArray(arr = []) {
     return copy;
 }
 
-function finalizeChoicesAndStatus({ aiResponse, monsterButtons, player }) {
+function finalizeChoicesAndStatus({
+    aiResponse,
+    monsterButtons,
+    player,
+    evolutionNotice = '',
+    evolutionChoices = []
+}) {
     let finalHp = Math.max(0, Number(player.hp || 0));
     let isAlive = true;
 
@@ -24,7 +30,10 @@ function finalizeChoicesAndStatus({ aiResponse, monsterButtons, player }) {
     }
 
     // 3. Clean the story text early
-    const cleanStory = aiResponse.replace(/\[.*?\]/g, '').trim();
+    let cleanStory = aiResponse.replace(/\[.*?\]/g, '').trim();
+    if (evolutionNotice) {
+        cleanStory = `${evolutionNotice}\n\n${cleanStory}`.trim();
+    }
 
     // ==========================================
     // 4. DEATH OVERRIDE (THE "ZOMBIE" FIX)
@@ -62,10 +71,21 @@ function finalizeChoicesAndStatus({ aiResponse, monsterButtons, player }) {
         allChoices = [...aiChoices];
     }
 
-    // 6. Clean, deduplicate, shuffle, and slice
-    const uniqueChoices = [...new Set(allChoices.filter(Boolean).map(c => String(c).trim()))];
-    const shuffledChoices = shuffleArray(uniqueChoices);
-    const finalChoices = shuffledChoices.slice(0, 4);
+    // 6. Clean, deduplicate, shuffle, and slice (evolution options listed first when present)
+    const evoList = (evolutionChoices || [])
+        .map((c) => String(c).trim())
+        .filter(Boolean);
+    const uniqueChoices = [...new Set(allChoices.filter(Boolean).map((c) => String(c).trim()))];
+    const withoutDupEvo = uniqueChoices.filter((c) => !evoList.includes(c));
+
+    let finalChoices;
+    if (evoList.length > 0) {
+        const shuffledRest = shuffleArray(withoutDupEvo);
+        finalChoices = [...evoList, ...shuffledRest].slice(0, 4);
+    } else {
+        const shuffledChoices = shuffleArray(uniqueChoices);
+        finalChoices = shuffledChoices.slice(0, 4);
+    }
 
     return {
         finalHp,

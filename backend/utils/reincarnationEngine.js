@@ -1,4 +1,8 @@
 const db = require('../config/db');
+const { parseLibrarySkillsObject } = require('./gameAction/fetchPlayerState');
+
+/** Karma granted per temporary mastery in `soul_library.skills` when the life ends (Soul Stream). */
+const KARMA_PER_TEMPORARY_SKILL = 5;
 
 const SOUL_STREAM_ACTION = '[SYSTEM] Accept Death and Enter the Soul Stream';
 
@@ -106,23 +110,32 @@ async function processSoulStreamTransition(userId, player) {
     const cached = await getSoulStreamCache(db, player.life_id);
     if (cached) return cached;
 
-    const karmaEarned = calculateKarma(player);
     const conn = await db.getConnection();
 
     try {
         await conn.beginTransaction();
 
         const [rows] = await conn.execute(
-            'SELECT accumulated_karma FROM soul_library WHERE user_id = ? FOR UPDATE',
+            'SELECT accumulated_karma, skills FROM soul_library WHERE user_id = ? FOR UPDATE',
             [userId]
         );
         if (!rows.length) {
             throw new Error('Soul library record missing.');
         }
 
+        const temporarySkillCount = Object.keys(
+            parseLibrarySkillsObject(rows[0].skills)
+        ).length;
+        const masteryKarmaBonus = temporarySkillCount * KARMA_PER_TEMPORARY_SKILL;
+        const baseKarma = calculateKarma(player);
+        const karmaEarned = baseKarma + masteryKarmaBonus;
+
         await conn.execute(
-            'UPDATE soul_library SET accumulated_karma = accumulated_karma + ? WHERE user_id = ?',
-            [karmaEarned, userId]
+            `UPDATE soul_library
+             SET accumulated_karma = accumulated_karma + ?,
+                 skills = ?
+             WHERE user_id = ?`,
+            [karmaEarned, '{}', userId]
         );
 
         const [totals] = await conn.execute(
@@ -141,6 +154,9 @@ async function processSoulStreamTransition(userId, player) {
         const payloadChoices = {
             type: 'SOUL_STREAM',
             karma_earned: karmaEarned,
+            base_karma: baseKarma,
+            mastery_karma_bonus: masteryKarmaBonus,
+            temporary_skill_count: temporarySkillCount,
             total_karma: totalKarma,
             vessel_draft: vesselDraftRows
         };
@@ -161,6 +177,9 @@ async function processSoulStreamTransition(userId, player) {
         return {
             status: 'SOUL_STREAM',
             karma_earned: karmaEarned,
+            base_karma: baseKarma,
+            mastery_karma_bonus: masteryKarmaBonus,
+            temporary_skill_count: temporarySkillCount,
             total_karma: totalKarma,
             system_output: SYSTEM_OUTPUT_SOUL_STREAM,
             vessel_draft: vesselDraftRows
@@ -223,6 +242,11 @@ async function rebirthWithVessel(userId, vesselId) {
 
         await assertNoActiveLife(conn, userId);
         await assertSoulStreamCompleted(conn, userId);
+
+        await conn.execute(
+            'UPDATE soul_library SET skills = ? WHERE user_id = ?',
+            ['{}', userId]
+        );
 
         const [vessels] = await conn.execute(
             'SELECT * FROM starting_vessels WHERE vessel_id = ? FOR UPDATE',
@@ -358,6 +382,7 @@ module.exports = {
     SOUL_STREAM_ACTION,
     SYSTEM_OUTPUT_SOUL_STREAM,
     calculateKarma,
+    KARMA_PER_TEMPORARY_SKILL,
     draftNewVessels,
     archiveLife,
     processSoulStreamTransition,

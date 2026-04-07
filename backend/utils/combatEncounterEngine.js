@@ -1,6 +1,22 @@
 const db = require('../config/db');
 const { calculateCombat } = require('./gameEngine');
 const { clampSp, clampHunger, isAggressiveAction } = require('./survivalEngine');
+const { MAX_MASTERY_LEVEL } = require('./gameAction/fetchPlayerState');
+
+/**
+ * Temporary mastery in `soul_library.skills` scales damage: Damage * (1 + (Level * 0.05)).
+ * No library entry for this skill name → multiplier 1.
+ */
+function skillDamageMultiplierFromLibrary(player, skillName) {
+    const m = player.library_skills_map || {};
+    const n = String(skillName || '').trim();
+    if (!n || m[n] == null) return 1;
+    const lv = Math.min(
+        MAX_MASTERY_LEVEL,
+        Math.max(1, Math.floor(Number(m[n]) || 1))
+    );
+    return 1 + lv * 0.05;
+}
 
 const getCounterDamage = (monster, player) => {
     const enemyAtk = Number(monster.base_offense || monster.base_attack || 5);
@@ -229,7 +245,9 @@ const resolveCombatEncounter = async ({ player, action, engineNotice = "" }) => 
         }
 
         player.sp = clampSp(player, curSp - spCost);
-        const finalDamage = computeMagicalStrikeDamage(player, activeMonster);
+        let finalDamage = computeMagicalStrikeDamage(player, activeMonster);
+        const masteryMult = skillDamageMultiplierFromLibrary(player, matchedSpell.name);
+        finalDamage = Math.max(1, Math.floor(finalDamage * masteryMult));
         const xpGained = appendSpellXpGain(player, activeMonster, finalDamage);
 
         engineNotice += ` [SPELL_CAST: Player successfully invoked ${matchedSpell.name}! Dealt massive damage.]`;
@@ -292,9 +310,17 @@ const resolveCombatEncounter = async ({ player, action, engineNotice = "" }) => 
         const finalSpCost = Number(result.spCost) || 4;
         const hungerFromCombat = Number(result.hungerCost) || 2;
 
+        const atkSkillMatch = findMatchedActiveSkill(actionLower, player.active_skills);
+        const masteryMult = skillDamageMultiplierFromLibrary(
+            player,
+            atkSkillMatch ? atkSkillMatch.name : ''
+        );
+
         if (isSkill) {
-            finalDamage = Math.floor(finalDamage * 1.5);
+            finalDamage = Math.floor(finalDamage * 1.5 * masteryMult);
             engineNotice += ` [SKILL_ACTIVATE: Inner Power channeled!]`;
+        } else if (atkSkillMatch && masteryMult > 1) {
+            finalDamage = Math.max(1, Math.floor(finalDamage * masteryMult));
         }
 
         player.xp = Number(player.xp || 0) + Number(result.xpGained || 0);

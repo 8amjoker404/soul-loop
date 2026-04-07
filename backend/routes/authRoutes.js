@@ -20,8 +20,8 @@ router.post('/register', async (req, res) => {
         const newUserId = result.insertId;
 
         await db.execute(
-            'INSERT INTO soul_library (user_id, permanent_skills) VALUES (?, ?)', 
-            [newUserId, '[]']
+            'INSERT INTO soul_library (user_id, permanent_skills, skills) VALUES (?, ?, ?)',
+            [newUserId, '[]', '{}']
         );
 
         res.status(201).json({ message: "Soul registered. Welcome to the Loop." });

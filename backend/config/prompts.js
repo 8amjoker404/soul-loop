@@ -24,6 +24,19 @@ module.exports = {
         // Fetches preference from users table: system_voice column
         const p = personas[player.system_voice] || personas.ADMIN;
         
+        const arsenal =
+            Array.isArray(player.all_soul_skills) && player.all_soul_skills.length
+                ? player.all_soul_skills.join(', ')
+                : 'None';
+
+        const libMap = player.library_skills_map || {};
+        const temporaryMasteryLine =
+            Object.keys(libMap).length > 0
+                ? Object.entries(libMap)
+                      .map(([name, lv]) => `${name} L${lv}`)
+                      .join(', ')
+                : 'None';
+
         let skillsLine = 'None';
         if (Array.isArray(player.active_skills) || Array.isArray(player.passive_skills)) {
             const act = (player.active_skills || [])
@@ -56,7 +69,9 @@ module.exports = {
             Vitals: HP ${player.hp}/${player.max_hp} | MP ${player.mp}/${player.max_mp} | SP ${player.sp}/${player.max_sp}
             Survival: Hunger ${player.hunger}/100
             Attributes: ATK ${player.offense} | DEF ${player.defense} | MAG ${player.magic_power} | RES ${player.resistance} | SPD ${player.speed}
-            Skills: ${skillsLine}
+            Full arsenal (Permanent Gifts + temporary life masteries): ${arsenal}
+            Temporary life masteries (levels from this incarnation): ${temporaryMasteryLine}
+            Permanent Gifts from Karma (detailed / combat-ready): ${skillsLine}
             Location Context: ${location.description_seed}
             
             --- ENVIRONMENT & CONTEXT FEED ---
@@ -74,6 +89,7 @@ module.exports = {
             6. MECHANICS: Naturally weave Attributes (MAG, RES, SPD, ATK, DEF) into the prose to justify success or failure.
             7. STYLE: Write like a living light novel scene. Keep it compact, vivid, and emotionally immersive.
             8. ENGINE PRIORITY: Treat [COMBAT_LOG] and [SYSTEM_LOG] results as the absolute source of truth.
+            9. MASTERY FLAVOR: Use "Temporary life masteries (levels)" — higher levels mean smoother, sharper, more instinctive use of that ability; near L10, portray it as second nature or preternatural.
 
             --- OUTPUT TAGS ---
             - If HP changes: [HP_SET: X]

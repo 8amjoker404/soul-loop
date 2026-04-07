@@ -3,8 +3,110 @@ const router = express.Router();
 const db = require('../config/db');
 const { verifyToken } = require('../middleware/auth');
 
+const ATTRIBUTE_KEYS = ['offense', 'defense', 'magic_power', 'resistance', 'speed'];
+
 // Lock down all player routes
 router.use(verifyToken);
+
+// ==========================================
+// POST /api/player/attributes — spend attribute_points on core stats
+// Body: { "offense": 2, "speed": 3, ... } (non-negative integers, sum <= attribute_points)
+// ==========================================
+router.post('/attributes', async (req, res) => {
+    const userId = req.user.userId;
+    const body = req.body || {};
+    const allocations = {};
+
+    for (const key of ATTRIBUTE_KEYS) {
+        if (body[key] === undefined || body[key] === null) {
+            continue;
+        }
+        const n = Number(body[key]);
+        if (!Number.isFinite(n) || n < 0 || !Number.isInteger(n)) {
+            return res.status(400).json({
+                error: `Invalid value for ${key}: use a non-negative integer.`
+            });
+        }
+        if (n > 0) {
+            allocations[key] = n;
+        }
+    }
+
+    const total = Object.values(allocations).reduce((a, b) => a + b, 0);
+    if (total === 0) {
+        return res.status(400).json({
+            error: 'Provide at least one positive allocation for offense, defense, magic_power, resistance, or speed.'
+        });
+    }
+
+    let conn;
+    try {
+        conn = await db.getConnection();
+        await conn.beginTransaction();
+
+        const [rows] = await conn.execute(
+            `SELECT life_id, attribute_points, offense, defense, magic_power, resistance, speed
+             FROM current_life
+             WHERE user_id = ? AND is_alive = 1
+             FOR UPDATE`,
+            [userId]
+        );
+
+        if (!rows.length) {
+            await conn.rollback();
+            return res.status(404).json({ error: 'No active vessel found.' });
+        }
+
+        const p = rows[0];
+        if (p.attribute_points < total) {
+            await conn.rollback();
+            return res.status(400).json({
+                error: 'Insufficient attribute points.',
+                attribute_points: p.attribute_points,
+                requested: total
+            });
+        }
+
+        const newAp = p.attribute_points - total;
+        const newOff = p.offense + (allocations.offense || 0);
+        const newDef = p.defense + (allocations.defense || 0);
+        const newMag = p.magic_power + (allocations.magic_power || 0);
+        const newRes = p.resistance + (allocations.resistance || 0);
+        const newSpd = p.speed + (allocations.speed || 0);
+
+        await conn.execute(
+            `UPDATE current_life
+             SET attribute_points = ?, offense = ?, defense = ?, magic_power = ?, resistance = ?, speed = ?
+             WHERE life_id = ?`,
+            [newAp, newOff, newDef, newMag, newRes, newSpd, p.life_id]
+        );
+
+        await conn.commit();
+
+        return res.json({
+            message: 'Attributes updated.',
+            allocation: allocations,
+            stats: {
+                attribute_points: newAp,
+                offense: newOff,
+                defense: newDef,
+                magic_power: newMag,
+                resistance: newRes,
+                speed: newSpd
+            }
+        });
+    } catch (err) {
+        if (conn) {
+            await conn.rollback();
+        }
+        console.error('ATTRIBUTES_ERROR:', err);
+        return res.status(500).json({ error: 'Failed to update attributes.' });
+    } finally {
+        if (conn) {
+            conn.release();
+        }
+    }
+});
 
 // ==========================================
 // ROUTE 1: GET FULL PLAYER PROFILE (With Visuals)
@@ -15,7 +117,7 @@ router.get('/profile', async (req, res) => {
     try {
         // 1. Get User Account & Soul Library Data
         const [soulRows] = await db.execute(`
-            SELECT u.username, u.email, s.soul_rank, s.accumulated_karma, s.permanent_skills, s.death_count 
+            SELECT u.username, u.email, u.permanent_skills, s.soul_rank, s.accumulated_karma, s.death_count 
             FROM users u 
             JOIN soul_library s ON u.id = s.user_id 
             WHERE u.id = ?`, 

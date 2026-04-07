@@ -17,6 +17,29 @@ const { saveUpdatedPlayerState } = require('../utils/gameAction/savePlayerState'
 const { logActionResult } = require('../utils/gameAction/logActionResult');
 const { getShopInventory, purchaseSkill } = require('../utils/meta/soulLibraryEngine');
 
+function buildStatsBlock(player, finalHp) {
+    return {
+        hp: finalHp,
+        max_hp: player.max_hp,
+        mp: player.mp,
+        max_mp: player.max_mp,
+        hunger: player.hunger,
+        sp: player.sp || 0,
+        max_sp: player.max_sp,
+        level: player.current_level,
+        xp: player.xp,
+        next_mark: player.next_level_xp,
+        attribute_points: player.attribute_points ?? 0,
+        skill_points: player.skill_points ?? 0,
+        offense: player.offense,
+        defense: player.defense,
+        magic_power: player.magic_power,
+        resistance: player.resistance,
+        speed: player.speed,
+        species: player.species
+    };
+}
+
 // Lock down these routes to authenticated users only
 router.use(verifyToken);
 
@@ -104,6 +127,54 @@ router.post('/action', async (req, res) => {
 
         player = actionFlow.player;
 
+        // --- EVOLUTION COMPLETE (no AI round — vessel already updated in applyActionFlow) ---
+        if (actionFlow.evolutionResolved) {
+            const finalData = finalizeChoicesAndStatus({
+                aiResponse: actionFlow.evolutionStory || actionFlow.engineNotice,
+                monsterButtons: [],
+                player,
+                evolutionNotice: '',
+                evolutionChoices: []
+            });
+
+            const [evoLoc] = await db.execute(
+                'SELECT location_image FROM location_seeds WHERE location_id = ?',
+                [player.current_location]
+            );
+            const evolutionBg = evoLoc.length > 0 ? evoLoc[0].location_image : null;
+
+            await saveUpdatedPlayerState({
+                db,
+                player,
+                finalHp: finalData.finalHp,
+                isAlive: finalData.isAlive
+            });
+
+            await logActionResult({
+                db,
+                lifeId: player.life_id,
+                action: normalizedAction,
+                cleanStory: finalData.cleanStory,
+                finalChoices: finalData.finalChoices,
+                backgroundUrl: evolutionBg,
+                monsterImageUrl: null
+            });
+
+            return res.json({
+                status: finalData.isAlive ? "ALIVE" : "DEAD",
+                stats: buildStatsBlock(player, finalData.finalHp),
+                level_up_notice: null,
+                enemy_stats: null,
+                system_output: finalData.cleanStory,
+                choices: finalData.finalChoices,
+                visuals: {
+                    background: evolutionBg,
+                    entity: null
+                },
+                evolution_complete: true
+            });
+        }
+
         // --- 3.5. SHORT TERM MEMORY FETCH ---
         const [memoryRows] = await db.execute(`
             SELECT user_action, system_response 
@@ -142,7 +213,9 @@ router.post('/action', async (req, res) => {
         const finalData = finalizeChoicesAndStatus({
             aiResponse: aiData.aiResponse,
             monsterButtons: actionFlow.monsterButtons,
-            player
+            player,
+            evolutionNotice: actionFlow.evolutionNotice || '',
+            evolutionChoices: actionFlow.evolutionChoices || []
         });
 
         // --- 6. SAVE UPDATED PLAYER STATE ---
@@ -167,17 +240,7 @@ router.post('/action', async (req, res) => {
         // --- 8. SEND RESPONSE ---
         return res.json({
             status: finalData.isAlive ? "ALIVE" : "DEAD",
-            stats: {
-                hp: finalData.finalHp,
-                max_hp: player.max_hp,
-                hunger: player.hunger,
-                sp: player.sp || 0, // Fallback to prevent null errors
-                level: player.current_level,
-                xp: player.xp,
-                next_mark: player.next_level_xp,
-                attribute_points: player.attribute_points ?? 0,
-                skill_points: player.skill_points ?? 0
-            },
+            stats: buildStatsBlock(player, finalData.finalHp),
             level_up_notice: levelUpNotice || null,
             // --- NEW: THE ENEMY HUD (DATABASE DRIVEN) ---
             enemy_stats: actionFlow.activeMonster ? {

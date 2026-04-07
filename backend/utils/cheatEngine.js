@@ -25,10 +25,10 @@ const handleAdminCheat = async (action, player, userId) => {
             [player.life_id]
         );
 
-        await db.execute(
-            'UPDATE soul_library SET permanent_skills = ? WHERE user_id = ?',
-            [JSON.stringify(cheatSkills), userId]
-        );
+        await db.execute('UPDATE users SET permanent_skills = ? WHERE id = ?', [
+            JSON.stringify(cheatSkills),
+            userId
+        ]);
 
         const godMsg = `[CRITICAL WARNING] FIREWALL BREACHED. Administrator status restored. Matrix absorbed.`;
 

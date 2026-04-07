@@ -15,6 +15,49 @@ function parsePermanentSkillNames(raw) {
     return [];
 }
 
+const MAX_MASTERY_LEVEL = 10;
+
+/**
+ * `soul_library.skills` as JSON object: { "Detection": 3, ... } (levels 1–10).
+ * Migrates legacy JSON arrays ["Detection"] → { "Detection": 1 }.
+ */
+function parseLibrarySkillsObject(raw) {
+    if (raw == null || raw === '') return {};
+    if (typeof raw === 'object' && raw !== null && !Array.isArray(raw)) {
+        const out = {};
+        for (const [k, v] of Object.entries(raw)) {
+            const lv = Math.floor(Number(v) || 1);
+            out[String(k)] = Math.min(MAX_MASTERY_LEVEL, Math.max(1, lv));
+        }
+        return out;
+    }
+    if (typeof raw === 'string') {
+        try {
+            const parsed = JSON.parse(raw);
+            if (Array.isArray(parsed)) {
+                const out = {};
+                for (const name of parsed) {
+                    out[String(name)] = 1;
+                }
+                return out;
+            }
+            if (parsed && typeof parsed === 'object') {
+                return parseLibrarySkillsObject(parsed);
+            }
+        } catch {
+            return {};
+        }
+    }
+    if (Array.isArray(raw)) {
+        const out = {};
+        for (const name of raw) {
+            out[String(name)] = 1;
+        }
+        return out;
+    }
+    return {};
+}
+
 /**
  * Loads `master_skills` rows for names in `users.permanent_skills` and sets
  * `player.active_skills` / `player.passive_skills` (detailed objects for AI & combat).
@@ -60,9 +103,22 @@ async function enrichPlayerWithMasterSkills(player) {
     return player;
 }
 
+/**
+ * Unique skill names for the current life (AI + engines).
+ * - Permanent: `users.permanent_skills` (Karma Gifts — persist across rebirth).
+ * - Temporary: keys of `soul_library.skills` object (life masteries — cleared on reincarnation).
+ */
+function mergeAllSoulSkills(permanentSkillsRaw, librarySkillsRaw) {
+    const permanent = parsePermanentSkillNames(permanentSkillsRaw);
+    const libMap = parseLibrarySkillsObject(librarySkillsRaw);
+    const temporary = Object.keys(libMap);
+    return Array.from(new Set([...permanent, ...temporary]));
+}
+
 async function fetchActivePlayerState(userId) {
     const [playerRows] = await db.execute(`
-        SELECT c.*, u.username, u.system_voice, u.permanent_skills, u.karma
+        SELECT c.*, u.username, u.system_voice, u.permanent_skills, u.karma,
+               s.skills AS library_skills
         FROM current_life c
         JOIN users u ON c.user_id = u.id
         JOIN soul_library s ON c.user_id = s.user_id
@@ -73,8 +129,12 @@ async function fetchActivePlayerState(userId) {
         throw new Error("No active life found.");
     }
 
-    await enrichPlayerWithMasterSkills(playerRows[0]);
-    return playerRows[0];
+    const row = playerRows[0];
+    row.library_skills_map = parseLibrarySkillsObject(row.library_skills);
+    row.all_soul_skills = mergeAllSoulSkills(row.permanent_skills, row.library_skills);
+
+    await enrichPlayerWithMasterSkills(row);
+    return row;
 }
 
 /**
@@ -82,7 +142,8 @@ async function fetchActivePlayerState(userId) {
  */
 async function fetchLatestLifeForUser(userId) {
     const [playerRows] = await db.execute(`
-        SELECT c.*, u.username, u.system_voice, u.permanent_skills, u.karma
+        SELECT c.*, u.username, u.system_voice, u.permanent_skills, u.karma,
+               s.skills AS library_skills
         FROM current_life c
         JOIN users u ON c.user_id = u.id
         JOIN soul_library s ON c.user_id = s.user_id
@@ -95,13 +156,20 @@ async function fetchLatestLifeForUser(userId) {
         return null;
     }
 
-    await enrichPlayerWithMasterSkills(playerRows[0]);
-    return playerRows[0];
+    const row = playerRows[0];
+    row.library_skills_map = parseLibrarySkillsObject(row.library_skills);
+    row.all_soul_skills = mergeAllSoulSkills(row.permanent_skills, row.library_skills);
+
+    await enrichPlayerWithMasterSkills(row);
+    return row;
 }
 
 module.exports = {
     fetchActivePlayerState,
     fetchLatestLifeForUser,
     enrichPlayerWithMasterSkills,
-    parsePermanentSkillNames
+    parsePermanentSkillNames,
+    parseLibrarySkillsObject,
+    mergeAllSoulSkills,
+    MAX_MASTERY_LEVEL
 };
