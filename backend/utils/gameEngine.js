@@ -1,78 +1,125 @@
 /**
- * gameEngine.js - THE "IMPOSSIBLE MODE" UPDATE
+ * gameEngine.js — combat math + level progression
  */
+
+const { clampSp } = require('./survivalEngine');
 
 const calculateCombat = (player, monster, options = {}) => {
     const isSkill = !!options.isSkill;
-    // Basic attack: low SP (2–5). Special / skill: moderate (10–15).
     const spCost = isSkill ? 12 : 4;
     const hungerCost = isSkill ? 4 : 2;
 
-    // 1. DIMINISHING RETURNS (Anti-Farm Logic)
-    // If you are way stronger than the prey, your soul doesn't grow from the kill.
     const levelDiff = player.current_level - monster.base_level;
     let xpMultiplier = 1.0;
 
-    if (levelDiff > 5) xpMultiplier = 0.5;   // 50% XP
-    if (levelDiff > 10) xpMultiplier = 0.1;  // 10% XP
-    if (levelDiff > 20) xpMultiplier = 0.0;  // 0 XP (You gain nothing from ants)
+    if (levelDiff > 5) xpMultiplier = 0.5;
+    if (levelDiff > 10) xpMultiplier = 0.1;
+    if (levelDiff > 20) xpMultiplier = 0.0;
 
-    // 2. SURVIVAL DEBUFFS
-    // Hunger < 10 = Weakened State (50% DMG)
-    const hungerFactor = (player.hunger < 10) ? 0.5 : 1.0;
-    
-    const rawDamage = ((player.offense * player.current_level) - (monster.base_defense / 2)) * hungerFactor;
+    const hungerFactor = player.hunger < 10 ? 0.5 : 1.0;
+
+    const rawDamage =
+        (player.offense * player.current_level - monster.base_defense / 2) * hungerFactor;
     const damageDealt = Math.max(1, Math.floor(rawDamage));
-    
-    const isMonsterDead = (monster.base_hp - damageDealt) <= 0;
 
-    // 3. XP REWARD SCALING
-    const rankXP = { 'F': 20, 'E': 50, 'D': 100, 'C': 250, 'B': 500, 'A': 1000, 'S': 5000 };
-    const baseXP = isMonsterDead ? (rankXP[monster.danger_rank] || 20) : 5;
-    
-    // Apply the Level Difference Penalty
+    const isMonsterDead = monster.base_hp - damageDealt <= 0;
+
+    const rankXP = { F: 20, E: 50, D: 100, C: 250, B: 500, A: 1000, S: 5000 };
+    const baseXP = isMonsterDead ? rankXP[monster.danger_rank] || 20 : 5;
+
     const xpGained = Math.floor(baseXP * xpMultiplier);
 
-    return { 
-        damageDealt, 
-        isMonsterDead, 
-        xpGained, 
+    return {
+        damageDealt,
+        isMonsterDead,
+        xpGained,
         monsterRemainingHp: Math.max(0, monster.base_hp - damageDealt),
         spCost,
         hungerCost
     };
 };
 
-const processLevelUp = (player) => {
-    // EXP CURVE: Level cubed * 100. 
-    // LV 1: 100 | LV 10: 100,000 | LV 20: 800,000
-    const requiredXp = Math.pow(player.current_level, 3) * 100;
+/**
+ * Threshold is `next_level_xp` (API may alias as `next_mark` on the player object).
+ * Supports multiple level-ups in one call. Persists to `current_life` when `db` is provided.
+ *
+ * @returns {Promise<{ player: object, levelUpNotice: string }>}
+ */
+async function checkLevelUp(player, db) {
+    if (!player) {
+        return { player, levelUpNotice: '' };
+    }
 
-    if (player.xp >= requiredXp) {
-        // --- THE EVOLUTION WALL ---
-        // If the player hits Level 10, 20, or 30, they CANNOT level up 
-        // until they evolve their vessel.
-        const evolutionMilestones = [10, 20, 30, 50];
-        if (evolutionMilestones.includes(player.current_level)) {
-            return { 
-                leveledUp: false, 
-                evolutionRequired: true, 
-                systemLog: "[SYSTEM_RESTRICTION]: Vessel reached maximum capacity. Evolution required to progress." 
-            };
+    let threshold = Math.max(
+        1,
+        Math.floor(Number(player.next_level_xp ?? player.next_mark) || 100)
+    );
+    player.next_level_xp = threshold;
+    if (player.next_mark !== undefined) {
+        player.next_mark = threshold;
+    }
+
+    const notices = [];
+    let xp = Math.floor(Number(player.xp) || 0);
+
+    while (xp >= threshold) {
+        const oldMark = threshold;
+
+        player.current_level = Math.floor(Number(player.current_level) || 1) + 1;
+        xp -= oldMark;
+        player.xp = xp;
+
+        threshold = Math.max(1, Math.floor(oldMark * 1.2));
+        player.next_level_xp = threshold;
+        if (player.next_mark !== undefined) {
+            player.next_mark = threshold;
         }
 
-        const newLevel = player.current_level + 1;
-        return {
-            leveledUp: true,
-            current_level: newLevel,
-            max_hp: player.max_hp + 10,
-            offense: player.offense + 2,
-            defense: player.defense + 2,
-            next_level_xp: Math.pow(newLevel, 3) * 100,
-            systemLog: `[SYSTEM_EVOLUTION]: Soul Density stabilized at Level ${newLevel}.`
-        };
-    }
-    return { leveledUp: false };
-};
+        player.attribute_points = Math.floor(Number(player.attribute_points) || 0) + 5;
+        player.skill_points = Math.floor(Number(player.skill_points) || 0) + 2;
 
-module.exports = { calculateCombat, processLevelUp };
+        const maxHp = Math.max(1, Math.floor(Number(player.max_hp) || 1));
+        const maxMp = Math.max(0, Math.floor(Number(player.max_mp) || 0));
+        const maxSp = Math.max(1, Math.floor(Number(player.max_sp) || 100));
+
+        player.hp = maxHp;
+        player.mp = maxMp;
+        player.sp = clampSp(player, maxSp);
+
+        notices.push(
+            `[SYSTEM_LEVEL_UP]: Reached Level ${player.current_level}! +5 Attribute Points, +2 Skill Points. HP/MP/SP fully restored. Next tier requires ${threshold} XP.`
+        );
+    }
+
+    const levelUpNotice = notices.length ? notices.join(' ') : '';
+
+    if (notices.length > 0 && db && player.life_id) {
+        await db.execute(
+            `UPDATE current_life SET
+                xp = ?,
+                current_level = ?,
+                next_level_xp = ?,
+                attribute_points = ?,
+                skill_points = ?,
+                hp = ?,
+                mp = ?,
+                sp = ?
+             WHERE life_id = ?`,
+            [
+                player.xp,
+                player.current_level,
+                player.next_level_xp,
+                player.attribute_points,
+                player.skill_points,
+                player.hp,
+                player.mp,
+                player.sp,
+                player.life_id
+            ]
+        );
+    }
+
+    return { player, levelUpNotice };
+}
+
+module.exports = { calculateCombat, checkLevelUp };

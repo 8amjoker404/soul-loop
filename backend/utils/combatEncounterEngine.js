@@ -10,7 +10,85 @@ const getCounterDamage = (monster, player) => {
     );
 };
 
-const loadOrCreateEncounter = async (player) => {
+/** Prefer longer skill names so "Hellfire" does not steal match from "Hellfire Orb". */
+function findMatchedActiveSkill(actionLower, activeSkills) {
+    if (!Array.isArray(activeSkills) || activeSkills.length === 0) return null;
+    const sorted = [...activeSkills].sort(
+        (a, b) => String(b.name || '').length - String(a.name || '').length
+    );
+    for (const skill of sorted) {
+        const n = String(skill.name || '').toLowerCase().trim();
+        if (n.length > 0 && actionLower.includes(n)) return skill;
+    }
+    return null;
+}
+
+/** Magical strike: same physical scaling as a normal hit, +30 guaranteed bonus damage. */
+function computeMagicalStrikeDamage(player, monster) {
+    const hungerFactor = Number(player.hunger) < 10 ? 0.5 : 1.0;
+    const raw =
+        (Number(player.offense || 0) * Number(player.current_level || 1) -
+            Number(monster.base_defense || 0) / 2) *
+        hungerFactor;
+    const base = Math.max(1, Math.floor(raw));
+    return base + 30;
+}
+
+function appendSpellXpGain(player, monster, finalDamage) {
+    const levelDiff = Number(player.current_level || 1) - Number(monster.base_level || 1);
+    let xpMultiplier = 1.0;
+    if (levelDiff > 5) xpMultiplier = 0.5;
+    if (levelDiff > 10) xpMultiplier = 0.1;
+    if (levelDiff > 20) xpMultiplier = 0.0;
+    const rankXP = { F: 20, E: 50, D: 100, C: 250, B: 500, A: 1000, S: 5000 };
+    const isKill = finalDamage >= Number(monster.current_hp);
+    const baseXP = isKill ? (rankXP[monster.danger_rank] || 20) : 5;
+    const xpGained = Math.floor(baseXP * xpMultiplier);
+    player.xp = Number(player.xp || 0) + xpGained;
+    return xpGained;
+}
+
+/** No new spawn while player is resting, looting, searching, etc. */
+const downtimeTriggers = [
+    'scavenge',
+    'eat',
+    'consume',
+    'rest',
+    'search',
+    'inventory',
+    'wait',
+    'look',
+    'harvest',
+    'loot',
+    'camp',
+    'stay',
+    'heal'
+];
+
+/** Only these intents re-roll the zone spawn table (exploration pressure). */
+const exploreTriggers = [
+    'move',
+    'walk',
+    'explore',
+    'travel',
+    'continue',
+    'leave',
+    'forward',
+    'deeper',
+    'venture',
+    'run',
+    'scout'
+];
+
+function actionHasDowntimeIntent(actionLower) {
+    return downtimeTriggers.some((t) => actionLower.includes(t));
+}
+
+function actionHasExploreIntent(actionLower) {
+    return exploreTriggers.some((t) => actionLower.includes(t));
+}
+
+const loadOrCreateEncounter = async (player, action) => {
     let activeMonster = null;
     let isNewEncounter = false;
 
@@ -23,38 +101,55 @@ const loadOrCreateEncounter = async (player) => {
 
     if (activeFights.length > 0) {
         activeMonster = activeFights[0];
-    } else {
-        const [spawns] = await db.execute(`
-            SELECT m.* FROM zone_spawns z 
-            JOIN master_npcs m ON z.npc_id = m.id 
-            WHERE z.zone_name = ? 
-              AND RAND() * 100 <= z.spawn_chance
-            LIMIT 1
-        `, [player.current_location]);
+        return { activeMonster, isNewEncounter };
+    }
 
-        if (spawns.length > 0) {
-            const m = spawns[0];
-            const dLevel = Math.max(
-                1,
-                Number(player.current_level || 1) + Math.floor(Math.random() * 3) - 1
-            );
-            const dHp = Number(m.base_hp || 1) + (dLevel * 10);
+    const actionLower = String(action || '').toLowerCase();
 
-            const [insertEnc] = await db.execute(`
-                INSERT INTO active_encounters (life_id, npc_id, dynamic_level, current_hp, max_hp)
-                VALUES (?, ?, ?, ?, ?)
-            `, [player.life_id, m.id, dLevel, dHp, dHp]);
+    if (actionHasDowntimeIntent(actionLower)) {
+        return { activeMonster: null, isNewEncounter: false };
+    }
 
-            activeMonster = {
-                ...m,
-                encounter_id: insertEnc.insertId,
-                dynamic_level: dLevel,
-                current_hp: dHp,
-                max_hp: dHp
-            };
+    if (!actionHasExploreIntent(actionLower)) {
+        return { activeMonster: null, isNewEncounter: false };
+    }
 
-            isNewEncounter = true;
-        }
+    const [spawns] = await db.execute(
+        `
+        SELECT m.* FROM zone_spawns z 
+        JOIN master_npcs m ON z.npc_id = m.id 
+        WHERE z.zone_name = ? 
+          AND RAND() * 100 <= z.spawn_chance
+        LIMIT 1
+    `,
+        [player.current_location]
+    );
+
+    if (spawns.length > 0) {
+        const m = spawns[0];
+        const dLevel = Math.max(
+            1,
+            Number(player.current_level || 1) + Math.floor(Math.random() * 3) - 1
+        );
+        const dHp = Number(m.base_hp || 1) + dLevel * 10;
+
+        const [insertEnc] = await db.execute(
+            `
+            INSERT INTO active_encounters (life_id, npc_id, dynamic_level, current_hp, max_hp)
+            VALUES (?, ?, ?, ?, ?)
+        `,
+            [player.life_id, m.id, dLevel, dHp, dHp]
+        );
+
+        activeMonster = {
+            ...m,
+            encounter_id: insertEnc.insertId,
+            dynamic_level: dLevel,
+            current_hp: dHp,
+            max_hp: dHp
+        };
+
+        isNewEncounter = true;
     }
 
     return { activeMonster, isNewEncounter };
@@ -70,10 +165,11 @@ const resolveCombatEncounter = async ({ player, action, engineNotice = "" }) => 
     const isAggressive = isAggressiveAction(action);
     const isSkill = actionLower.includes("skill") || actionLower.includes("risky") || actionLower.includes("beast");
 
-    const { activeMonster, isNewEncounter } = await loadOrCreateEncounter(player);
+    const { activeMonster, isNewEncounter } = await loadOrCreateEncounter(player, action);
 
     if (!activeMonster) {
-        // No encounter: aggressive swings still cost a little SP (combat layer only; survival skipped attack SP)
+        // Empty room: monsterContext / monsterButtons stay blank so narration is pure downtime.
+        // Aggressive actions with no target still pay a small whiff cost.
         if (isAggressive) {
             const whiffSp = isSkill ? 12 : 4;
             const cur = clampSp(player, player.sp);
@@ -92,6 +188,99 @@ const resolveCombatEncounter = async ({ player, action, engineNotice = "" }) => 
     }
 
     monsterImageUrl = activeMonster.npc_image || null;
+
+    // ==========================================
+    // 0. ACTIVE SPELL (strict magic — before standard aggression / calculateCombat)
+    // ==========================================
+    const matchedSpell = findMatchedActiveSkill(actionLower, player.active_skills);
+    if (matchedSpell) {
+        const spCost = Math.max(0, Math.floor(Number(matchedSpell.sp_cost) || 0));
+        const curSp = clampSp(player, player.sp);
+
+        if (curSp < spCost) {
+            engineNotice +=
+                ` [SPELL_FIZZLE: ${matchedSpell.name} failed — insufficient stamina (${curSp}/${spCost} SP). The spell fizzles; the ${activeMonster.name} presses the opening!]`;
+            const counterDamage = getCounterDamage(activeMonster, player);
+            player.hp = Math.max(0, Number(player.hp || 0) - counterDamage);
+
+            if (player.hp === 0) {
+                engineNotice += ` [FATAL_BLOW_RECEIVED: ${activeMonster.name} struck for ${counterDamage} DMG while your spell collapsed. Player HP reached 0. Output [STATUS: DECEASED].]`;
+                await db.execute('DELETE FROM active_encounters WHERE encounter_id = ?', [activeMonster.encounter_id]);
+                monsterContext = `[SYSTEM: VESSEL DESTROYED]`;
+                monsterButtons = [];
+            } else {
+                engineNotice += ` [COUNTER_LOG: ${activeMonster.name} punishes your drained stamina! Took ${counterDamage} DMG.]`;
+                monsterContext = `[IN COMBAT: Lvl ${activeMonster.dynamic_level} ${activeMonster.name}. Enemy HP: ${activeMonster.current_hp}/${activeMonster.max_hp}]. `;
+                monsterButtons = [
+                    `Attack the ${activeMonster.name}`,
+                    `[DEFEND] Brace for ${activeMonster.name}'s next move`,
+                    `Attempt to Flee from the ${activeMonster.name}`
+                ];
+            }
+
+            return {
+                player,
+                engineNotice,
+                monsterContext,
+                monsterButtons,
+                monsterImageUrl,
+                activeMonster
+            };
+        }
+
+        player.sp = clampSp(player, curSp - spCost);
+        const finalDamage = computeMagicalStrikeDamage(player, activeMonster);
+        const xpGained = appendSpellXpGain(player, activeMonster, finalDamage);
+
+        engineNotice += ` [SPELL_CAST: Player successfully invoked ${matchedSpell.name}! Dealt massive damage.]`;
+
+        if (finalDamage >= activeMonster.current_hp) {
+            engineNotice += ` [COMBAT_LOG: Spell vs Lvl ${activeMonster.dynamic_level} ${activeMonster.name}. DMG: ${finalDamage}. Status: TARGET_ELIMINATED. XP: ${xpGained}.]`;
+            await db.execute('DELETE FROM active_encounters WHERE encounter_id = ?', [activeMonster.encounter_id]);
+
+            activeMonster.current_hp = 0;
+
+            monsterContext = `[ENCOUNTER CLEARED] The corpse of the ${activeMonster.name} lies before you. `;
+        } else {
+            const remainingHp = activeMonster.current_hp - finalDamage;
+            const counterDamage = getCounterDamage(activeMonster, player);
+            player.hp = Math.max(0, Number(player.hp || 0) - counterDamage);
+
+            if (player.hp === 0) {
+                engineNotice += ` [FATAL_BLOW_RECEIVED: ${activeMonster.name} retaliated with ${counterDamage} DMG. Player HP reached 0. Output [STATUS: DECEASED]. Narrate the vessel's death and the soul leaving the body.]`;
+                await db.execute('DELETE FROM active_encounters WHERE encounter_id = ?', [activeMonster.encounter_id]);
+
+                activeMonster.current_hp = remainingHp;
+
+                monsterContext = `[SYSTEM: VESSEL DESTROYED]`;
+                monsterButtons = [];
+            } else {
+                engineNotice += ` [COMBAT_LOG: DMG: ${finalDamage}. Enemy HP: ${remainingHp}/${activeMonster.max_hp}.]`;
+                engineNotice += ` [COUNTER_LOG: ${activeMonster.name} retaliates! Player took ${counterDamage} DMG.]`;
+
+                await db.execute('UPDATE active_encounters SET current_hp = ? WHERE encounter_id = ?', [remainingHp, activeMonster.encounter_id]);
+
+                activeMonster.current_hp = remainingHp;
+
+                monsterContext = `[DUEL: Lvl ${activeMonster.dynamic_level} ${activeMonster.name} (${activeMonster.danger_rank})]. It prepares a follow-up strike! Enemy HP: ${remainingHp}/${activeMonster.max_hp}. `;
+                monsterButtons = [
+                    `Attack the ${activeMonster.name}`,
+                    `[SKILL] Unleash Heavy Strike on ${activeMonster.name}`,
+                    `[DEFEND] Brace for ${activeMonster.name}'s next move`,
+                    `Attempt to Flee from the ${activeMonster.name}`
+                ];
+            }
+        }
+
+        return {
+            player,
+            engineNotice,
+            monsterContext,
+            monsterButtons,
+            monsterImageUrl,
+            activeMonster
+        };
+    }
 
     // ==========================================
     // 1. COMBAT ACTION LOGIC (THE FIGHT)

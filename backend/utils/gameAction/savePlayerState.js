@@ -15,6 +15,9 @@ async function saveUpdatedPlayerState({ db, player, finalHp, isAlive }) {
         Number(player.defense || 1),
         safeHunger,
         safeSp,
+        Number(player.mp ?? player.max_mp ?? 0),
+        Number(player.attribute_points || 0),
+        Number(player.skill_points || 0),
         player.current_location,
         isAlive ? 1 : 0,
         player.inventory,
@@ -26,6 +29,7 @@ async function saveUpdatedPlayerState({ db, player, finalHp, isAlive }) {
         `UPDATE current_life
          SET hp = ?, xp = ?, current_level = ?, max_hp = ?, next_level_xp = ?,
              offense = ?, defense = ?, hunger = ?, sp = ?,
+             mp = ?, attribute_points = ?, skill_points = ?,
              current_location = ?, is_alive = ?,
              inventory = ?, home_base = ?
          WHERE life_id = ?`,

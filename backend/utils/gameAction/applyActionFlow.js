@@ -1,20 +1,35 @@
 // backend/utils/gameAction/applyActionFlow.js
 const { handleAdminCheat } = require('../cheatEngine');
 const { scanWorldContext } = require('../worldEngine');
-const { processLevelUp } = require('../gameEngine');
+const { checkLevelUp } = require('../gameEngine');
 const { resolveCombatEncounter } = require('../combatEncounterEngine');
 const { calculateSurvivalCost, isAggressiveAction } = require('../survivalEngine');
 const { parseSurvivalAction } = require('../actionParser');
 const { handleZoneTravel } = require('../travelEngine');
+const { handleScavengeAction } = require('./scavengeEngine');
 
 async function applyActionFlow({ player, userId, action, db }) {
-    // --- 1. SURVIVAL CALCULATIONS (combat handles SP for attacks/skills — no double-dip) ---
-    const survival = calculateSurvivalCost(player, action, {
-        aggressiveCombatStamina: isAggressiveAction(action)
-    });
-    player.hunger = survival.hunger;
-    player.sp = survival.sp;
-    player.hp -= survival.healthPenalty;
+    // --- 1. SCAVENGE / CONSUME / HARVEST (bypasses standard survival cost for this turn) ---
+    const scavengeResult = handleScavengeAction(player, action);
+    const scavengeHandled = scavengeResult != null;
+
+    let survival;
+    if (scavengeHandled) {
+        player = scavengeResult.player;
+        survival = {
+            hunger: player.hunger,
+            sp: player.sp,
+            healthPenalty: 0,
+            statusNotice: ''
+        };
+    } else {
+        survival = calculateSurvivalCost(player, action, {
+            aggressiveCombatStamina: isAggressiveAction(action)
+        });
+        player.hunger = survival.hunger;
+        player.sp = survival.sp;
+        player.hp -= survival.healthPenalty;
+    }
 
     // --- 2. CHEAT ENGINE CHECK ---
     const cheatCheck = await handleAdminCheat(action, player, userId);
@@ -28,7 +43,9 @@ async function applyActionFlow({ player, userId, action, db }) {
     const worldData = await scanWorldContext(player, userId);
 
     // --- 4. COMBAT ENGINE LOGIC ---
-    let engineNotice = survival.statusNotice || "";
+    let engineNotice = scavengeHandled
+        ? (scavengeResult.engineNotice || '')
+        : (survival.statusNotice || '');
     let monsterContext = "";
     let monsterButtons = [];
     let monsterImageUrl = null;
@@ -45,8 +62,12 @@ async function applyActionFlow({ player, userId, action, db }) {
     monsterButtons = combatData.monsterButtons;
     monsterImageUrl = combatData.monsterImageUrl;
 
-    // --- 5. SURVIVAL ACTION PARSER ---
-    if (!action.startsWith("Attack") && !action.startsWith("Attempt to Flee")) {
+    // --- 5. SURVIVAL ACTION PARSER (skip if scavenge engine already resolved consume/harvest) ---
+    if (
+        !scavengeHandled &&
+        !action.startsWith('Attack') &&
+        !action.startsWith('Attempt to Flee')
+    ) {
         const parsedSurvival = parseSurvivalAction(player, action, engineNotice);
         player = parsedSurvival.player;
         engineNotice = parsedSurvival.engineNotice;
@@ -59,18 +80,16 @@ async function applyActionFlow({ player, userId, action, db }) {
     }
     engineNotice += travelData.travelNotice;
 
-    // --- 7. LEVEL ENGINE ---
-    const levelData = processLevelUp(player);
-    if (levelData.leveledUp) {
-        Object.assign(player, levelData);
-        engineNotice += ` ${levelData.systemLog}`;
-    } else if (levelData.evolutionRequired) {
-        engineNotice += ` ${levelData.systemLog}`;
+    // --- 7. LEVEL UP (XP threshold vs next_level_xp; persists to DB) ---
+    const { levelUpNotice } = await checkLevelUp(player, db);
+    if (levelUpNotice) {
+        engineNotice += ` ${levelUpNotice}`;
     }
 
     return {
         player,
         engineNotice,
+        levelUpNotice: levelUpNotice || '',
         monsterContext,
         monsterButtons,
         monsterImageUrl,

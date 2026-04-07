@@ -136,6 +136,8 @@ router.post('/action', async (req, res) => {
             db
         });
 
+        const levelUpNotice = actionFlow.levelUpNotice || '';
+
         // --- 5. FINALIZE STATUS & CHOICES ---
         const finalData = finalizeChoicesAndStatus({
             aiResponse: aiData.aiResponse,
@@ -172,8 +174,11 @@ router.post('/action', async (req, res) => {
                 sp: player.sp || 0, // Fallback to prevent null errors
                 level: player.current_level,
                 xp: player.xp,
-                next_mark: player.next_level_xp
+                next_mark: player.next_level_xp,
+                attribute_points: player.attribute_points ?? 0,
+                skill_points: player.skill_points ?? 0
             },
+            level_up_notice: levelUpNotice || null,
             // --- NEW: THE ENEMY HUD (DATABASE DRIVEN) ---
             enemy_stats: actionFlow.activeMonster ? {
                 name: actionFlow.activeMonster.name,

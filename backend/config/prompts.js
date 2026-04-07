@@ -24,14 +24,26 @@ module.exports = {
         // Fetches preference from users table: system_voice column
         const p = personas[player.system_voice] || personas.ADMIN;
         
-        let skills = [];
-        try { 
-            // Parses from player.permanent_skills (users.permanent_skills via fetchPlayerState)
-            skills = (typeof player.permanent_skills === 'string') 
-                ? JSON.parse(player.permanent_skills) 
-                : (player.permanent_skills || []); 
-        } catch(e) { 
-            skills = []; 
+        let skillsLine = 'None';
+        if (Array.isArray(player.active_skills) || Array.isArray(player.passive_skills)) {
+            const act = (player.active_skills || [])
+                .map((s) => `${s.name} [ACTIVE, ${s.sp_cost} SP]: ${s.description || ''}`)
+                .join(' | ');
+            const pas = (player.passive_skills || [])
+                .map((s) => `${s.name} [${s.skill_type || 'PASSIVE'}]: ${s.description || ''}`)
+                .join(' | ');
+            const parts = [act, pas].filter(Boolean);
+            skillsLine = parts.length ? parts.join(' || ') : 'None';
+        } else {
+            let skills = [];
+            try {
+                skills = (typeof player.permanent_skills === 'string')
+                    ? JSON.parse(player.permanent_skills)
+                    : (player.permanent_skills || []);
+            } catch (e) {
+                skills = [];
+            }
+            skillsLine = Array.isArray(skills) && skills.length ? skills.join(', ') : 'None';
         }
 
         return `
@@ -44,7 +56,7 @@ module.exports = {
             Vitals: HP ${player.hp}/${player.max_hp} | MP ${player.mp}/${player.max_mp} | SP ${player.sp}/${player.max_sp}
             Survival: Hunger ${player.hunger}/100
             Attributes: ATK ${player.offense} | DEF ${player.defense} | MAG ${player.magic_power} | RES ${player.resistance} | SPD ${player.speed}
-            Skills: ${skills.join(', ') || 'None'}
+            Skills: ${skillsLine}
             Location Context: ${location.description_seed}
             
             --- ENVIRONMENT & CONTEXT FEED ---
