@@ -21,6 +21,7 @@ const { saveUpdatedPlayerState } = require('../utils/gameAction/savePlayerState'
 const { logActionResult } = require('../utils/gameAction/logActionResult');
 const { getShopInventory, purchaseSkill } = require('../utils/meta/soulLibraryEngine');
 const { buildPredictiveSuggestions } = require('../utils/gameAction/predictiveSuggestions');
+const { resolvePendingMilestones } = require('../utils/storyMilestones');
 
 function buildStatsBlock(player, finalHp) {
     return {
@@ -249,6 +250,32 @@ router.get('/status', async (req, res) => {
 });
 
 // ==========================================
+// GET /api/game/context — story milestones for AI injection
+// ==========================================
+router.get('/context', async (req, res) => {
+    const userId = req.user?.userId;
+
+    if (!userId) {
+        return res.status(401).json({ error: 'Unauthorized.' });
+    }
+
+    try {
+        const player = await fetchActivePlayerState(userId);
+        const data = await resolvePendingMilestones(db, userId, player);
+        return res.json({
+            story_injection: data.story_injection,
+            milestones_fired: data.milestones_fired
+        });
+    } catch (err) {
+        if (err.message === 'No active life found.') {
+            return res.status(404).json({ error: 'No active vessel found.' });
+        }
+        console.error('CONTEXT_ERROR:', err);
+        return res.status(500).json({ error: 'Failed to load story context.', details: err.message });
+    }
+});
+
+// ==========================================
 // POST /api/game/suggest — predictive action auto-complete (DB + Gemini)
 // ==========================================
 router.post('/suggest', async (req, res) => {
@@ -389,8 +416,12 @@ router.post('/action', async (req, res) => {
             memoryContext += "[END MEMORY]\n";
         }
 
-        // --- 4. BUILD AI RESPONSE ---
-        // We now pass memoryContext to the builder
+        // --- 3.7 STORY MILESTONES — after action flow (level/location match DB state) but before AI generation ---
+        const accountId = req.user.userId ?? req.user.id;
+        const { story_injection, milestones_fired } = await resolvePendingMilestones(db, accountId, player);
+        const prioritizeLifeActions = !actionFlow.activeMonster;
+
+        // --- 4. BUILD AI RESPONSE (Gemini) ---
         const aiData = await buildAiGameResponse({
             player,
             action: normalizedAction,
@@ -398,7 +429,9 @@ router.post('/action', async (req, res) => {
             monsterContext: actionFlow.monsterContext,
             worldLore: actionFlow.worldLore,
             memoryContext: memoryContext,
-            db
+            db,
+            storyContext: story_injection || '',
+            prioritizeLifeActions
         });
 
         const levelUpNotice = actionFlow.levelUpNotice || '';
@@ -436,6 +469,8 @@ router.post('/action', async (req, res) => {
             status: finalData.isAlive ? "ALIVE" : "DEAD",
             stats: buildStatsBlock(player, finalData.finalHp),
             level_up_notice: levelUpNotice || null,
+            story_injection: story_injection || null,
+            milestones_fired,
             // --- NEW: THE ENEMY HUD (DATABASE DRIVEN) ---
             enemy_stats: actionFlow.activeMonster ? {
                 name: actionFlow.activeMonster.name,

@@ -10,6 +10,7 @@ const { handleScavengeAction } = require('./scavengeEngine');
 const { checkEvolutionEligibility, evolvePlayer } = require('../evolutionEngine');
 const { maybeLearnDetectionFromSearch } = require('./learningInterceptor');
 const { maybeProgressMastery } = require('./skillMasteryInterceptor');
+const { enrichSearchExploration, isSearchLikeAction } = require('./searchExploration');
 
 function emptyFlowTail() {
     return {
@@ -105,6 +106,14 @@ async function applyActionFlow({ player, userId, action, db }) {
     monsterContext = combatData.monsterContext;
     monsterButtons = combatData.monsterButtons;
     monsterImageUrl = combatData.monsterImageUrl;
+
+    // --- 4b. SEARCH / LOOK / SCAN — `location_seeds.hidden_lore` + `reincarnated_npcs` at current location_id ---
+    if (isSearchLikeAction(normalizedAction)) {
+        const searchExtra = await enrichSearchExploration(db, player, normalizedAction);
+        if (searchExtra) {
+            engineNotice = `${engineNotice} ${searchExtra}`.trim();
+        }
+    }
 
     // --- 5. SURVIVAL ACTION PARSER (skip if scavenge engine already resolved consume/harvest) ---
     if (

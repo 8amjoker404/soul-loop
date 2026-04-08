@@ -19,10 +19,22 @@ const personas = {
 };
 
 module.exports = {
-    // UPDATED: Added memoryContext to the function signature
-    buildSystemPrompt: (player, location, action, fullContext) => {
+    /**
+     * @param {object} options
+     * @param {string} [options.storyContext] Milestone text to weave into the scene
+     * @param {boolean} [options.prioritizeLifeActions] If true (no active monster), favor daily-life / training choices
+     */
+    buildSystemPrompt: (player, location, action, fullContext, options = {}) => {
+        const storyInjection = options.storyContext != null ? String(options.storyContext).trim() : '';
+        const prioritizeLifeActions = Boolean(options.prioritizeLifeActions);
+
         // Fetches preference from users table: system_voice column
         const p = personas[player.system_voice] || personas.ADMIN;
+
+        const hiddenLine =
+            location.hidden_lore && String(location.hidden_lore).trim()
+                ? `\nHidden / discovered features: ${String(location.hidden_lore).trim()}`
+                : '';
         
         const arsenal =
             Array.isArray(player.all_soul_skills) && player.all_soul_skills.length
@@ -72,7 +84,15 @@ module.exports = {
             Full arsenal (Permanent Gifts + temporary life masteries): ${arsenal}
             Temporary life masteries (levels from this incarnation): ${temporaryMasteryLine}
             Permanent Gifts from Karma (detailed / combat-ready): ${skillsLine}
-            Location Context: ${location.description_seed}
+            Location Context: ${location.description_seed}${hiddenLine}
+            
+            --- STORY CONTEXT ---
+            STORY CONTEXT: ${storyInjection || 'None'}
+            
+            --- STORY INSTRUCTIONS ---
+            If STORY CONTEXT is present (not "None"), prioritize narrating this story event in the scene—it should feel earned and central this turn.
+            If no monster is active in [MONSTER CONTEXT] and STORY CONTEXT is present, lean into environmental storytelling, tension without combat, and life-based next choices.
+            If STORY CONTEXT is "None", proceed from Location Context and [ENGINE FEED] only.
             
             --- ENVIRONMENT & CONTEXT FEED ---
             ${fullContext}
@@ -90,6 +110,7 @@ module.exports = {
             7. STYLE: Write like a living light novel scene. Keep it compact, vivid, and emotionally immersive.
             8. ENGINE PRIORITY: Treat [COMBAT_LOG] and [SYSTEM_LOG] results as the absolute source of truth.
             9. MASTERY FLAVOR: Use "Temporary life masteries (levels)" — higher levels mean smoother, sharper, more instinctive use of that ability; near L10, portray it as second nature or preternatural.
+            ${prioritizeLifeActions ? `10. ANIME / LIFE MODE (NO ACTIVE MONSTER): The [MONSTER CONTEXT] is empty or non-hostile. Prioritize slice-of-life, training, base-building, and curiosity over combat. Do NOT invent a fight unless [ENGINE FEED] or [COMBAT_LOG] demands it.` : `10. COMBAT READINESS: If [MONSTER CONTEXT] shows an active threat, keep tension and tactical choices appropriate to that encounter.`}
 
             --- OUTPUT TAGS ---
             - If HP changes: [HP_SET: X]
@@ -102,6 +123,7 @@ module.exports = {
             Provide exactly 3 choices for the next move. 
             - One choice MUST reflect the player's Vessel Type (${player.vessel_type}) instinct.
             - Append the estimated physical or metabolic cost to the end of the choice text.
+            ${prioritizeLifeActions ? `- LIFE-ACTION PRIORITY: Favor non-combat "anime episode" options such as: "Improve Home Base", "Practice Skill: Thread Manipulation" (or another skill they own), "Listen to the Labyrinth's Echoes", "Tend your nest or territory", "Study the terrain calmly". Only one choice may be risky/combat-oriented unless the engine feed already has combat.` : `- COMBAT-ACTION PRIORITY: Keep at least one choice combat-relevant if [MONSTER CONTEXT] indicates an active enemy.`}
             Format EXACTLY like this:
             [CHOICE_1: (Approach) Description of action. (Cost: Low SP)]
             [CHOICE_2: (${player.vessel_type.toUpperCase()}) Description of action. (Cost: High SP, Med Hunger)]

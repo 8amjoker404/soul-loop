@@ -23,12 +23,28 @@ async function buildAiGameResponse({
     monsterContext,
     worldLore,
     memoryContext,
-    db
+    db,
+    storyContext = '',
+    prioritizeLifeActions = false
 }) {
-    const [locRows] = await db.execute(
-        'SELECT location_image, description_seed FROM location_seeds WHERE location_id = ?',
-        [player.current_location]
-    );
+    let locRows;
+    try {
+        const [rows] = await db.execute(
+            'SELECT location_image, description_seed, hidden_lore FROM location_seeds WHERE location_id = ?',
+            [player.current_location]
+        );
+        locRows = rows;
+    } catch (err) {
+        if (err.code === 'ER_BAD_FIELD_ERROR') {
+            const [rows] = await db.execute(
+                'SELECT location_image, description_seed FROM location_seeds WHERE location_id = ?',
+                [player.current_location]
+            );
+            locRows = rows;
+        } else {
+            throw err;
+        }
+    }
 
     const backgroundUrl = locRows.length > 0 ? locRows[0].location_image : null;
 
@@ -36,7 +52,8 @@ async function buildAiGameResponse({
         description_seed:
             locRows.length > 0 && locRows[0].description_seed
                 ? locRows[0].description_seed
-                : String(player.current_location || "Unknown location")
+                : String(player.current_location || "Unknown location"),
+        hidden_lore: locRows.length > 0 && locRows[0].hidden_lore ? locRows[0].hidden_lore : null
     };
 
     const fullContext = `
@@ -57,7 +74,8 @@ ${engineNotice || "None"}
         player,
         location,
         action,
-        fullContext
+        fullContext,
+        { storyContext, prioritizeLifeActions }
     );
 
     let aiResponse = "";
@@ -69,7 +87,17 @@ ${engineNotice || "None"}
         console.error("AI ERROR:", err.message);
 
         // ⚡ FALLBACK RESPONSE
-        aiResponse = `
+        if (prioritizeLifeActions) {
+            aiResponse = `
+The labyrinth holds its breath. No fangs snap at you—only space, thread, and echo.
+
+---
+[CHOICE_1: Improve Home Base (Cost: Med SP, Low Hunger)]
+[CHOICE_2: (${String(player.vessel_type || 'BEAST').toUpperCase()}) Practice Skill: Thread Manipulation (Cost: Low SP)]
+[CHOICE_3: Listen to the Labyrinth's Echoes (Cost: Low SP)]
+            `.trim();
+        } else {
+            aiResponse = `
 The system falters for a moment… but the world does not pause.
 
 The air remains heavy. Danger still surrounds you. Your instincts must decide your next move.
@@ -78,7 +106,8 @@ The air remains heavy. Danger still surrounds you. Your instincts must decide yo
 [CHOICE_1: Attack forward. (Cost: Low SP)]
 [CHOICE_2: Defend and stabilize. (Cost: Low SP)]
 [CHOICE_3: Attempt escape. (Cost: Medium SP)]
-        `.trim();
+            `.trim();
+        }
     }
 
     return {

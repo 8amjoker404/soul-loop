@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost
--- Generation Time: Apr 07, 2026 at 02:04 AM
+-- Generation Time: Apr 08, 2026 at 02:40 AM
 -- Server version: 10.4.28-MariaDB
 -- PHP Version: 8.2.4
 
@@ -144,7 +144,10 @@ INSERT INTO `action_logs` (`log_id`, `life_id`, `user_action`, `system_response`
 (97, 10, 'Release a low-frequency hiss and scent-mark the perimeter to deter other Lesser Taratects from encroaching on your territory', '**SYSTEM STATUS: ANALYTICAL REPORT**\n\n**ENVIRONMENTAL ANALYSIS:** The air in the *elroe_upper* sector remains saturated with high humidity. The viscous remnants of the previous engagement—a splattering of translucent blue ichor and fragments of calcified chitin—have begun to congeal on the limestone floor, emitting a sharp, pheromonal musk that signals a successful kill.\n\n**ACTION LOG:** The subject expels a series of rhythmic, low-frequency vibrations from its abdomen. This subsonic hiss reverberates through the porous limestone walls, creating a territorial deterrent zone. Simultaneously, the subject deposits glandular secretions along the cave entrance. The scent-marking creates an olfactory boundary; the biological profile of the previous kill serves as a warning to encroaching Lesser Taratects that this sector is occupied and reclaimed.\n\n**BIOLOGICAL STATUS:** The exertion of energy to manipulate territorial glands and vocal organs results in a marginal depletion of energy reserves. The presence of dried ichor on the subject\'s limbs provides a grim reminder of the caloric intake required to maintain its current Level 4 status.\n\n**URGENCY:** Metabolic instability persists. Despite the recent consumption, the hunger gauge is steadily declining. The labyrinth is silent for now, but the distant clicking of arachnid limbs suggests that larger entities may be migrating toward the scent of the struggle.\n\n\n\n***', '[\"(Risky Action) Descend deeper into the vertical shaft to scavenge superior prey remains left by higher-level predators. (Cost: High HP Risk)\",\"(BEAST) Aggressively expand the web-netting perimeter to catch passing cave-swarms for immediate caloric replenishment. (Cost: Med SP, Low Hunger)\",\"(Explore) Scout the immediate vicinity for minor moisture sources or cave moss to supplement fluid intake. (Cost: Low SP)\"]', '2026-04-06 23:22:58', 'http://localhost:7000/uploads/generic_1775336009652-172069962.png', NULL),
 (98, 10, 'Eat the remains of the dead monster.', '**SYSTEM STATUS: ANALYTICAL REPORT**\n\n**BIOLOGICAL ASSIMILATION:** The chitinous remains of the previous encounter, previously fractured by your own mandibles, are processed. The metallic, bitter taste of the biological matter coats your sensory palps as you ingest the viscous ichor pooling on the limestone floor. The internal chemistry of your vessel shifts; the hunger gnawing at your abdominal cavity recedes as the nutrient density is converted into metabolic stability. \n\n**ENVIRONMENTAL ANALYSIS:** The air within the *Elroe Upper Labyrinth* remains stagnant. The humidity, calculated at 98%, causes the cooling blood on your mandibles to become tacky. The ambient noise—the chittering of distant, unseen organisms—suggests that the scent of the struggle and the act of feeding may have breached the perimeter, potentially attracting larger predators. Your current DEF of 5 remains nominal; should a higher-tier entity arrive, your current physical integrity will be insufficient to withstand significant trauma.\n\n**METABOLIC UPDATE:** Assimilation complete. Your digestive system optimizes the intake, translating the biomass into a moderate recovery of cellular vitality and a significant reduction in caloric deficit.\n\n (Note: Over-cap status achieved)\n\n\n\n---\n\n****\n\n****\n\n****', '[\"(Scout) Scour the immediate vicinity for structural weaknesses or hidden alcoves to minimize exposure. (Cost: Low SP)\",\"(BEAST) Aggressively scent-mark the kill site, reinforcing territorial dominance to deter encroaching predators. (Cost: High SP)\",\"(Risky Action) Attempt to scale the cavern wall toward the high-ceiling webs to monitor potential threats from above. (Cost: High HP Risk)\"]', '2026-04-06 23:23:25', 'http://localhost:7000/uploads/generic_1775336009652-172069962.png', NULL),
 (99, 10, 'Eat the remains of the dead monster.', '**SYSTEM STATUS: ANALYTICAL REPORT**\n\n**BIOLOGICAL ASSIMILATION:** The remaining chitinous fragments and vestigial tissues of the previous adversary are processed. Your mandibles grind through the hardened exoskeleton, the sound echoing sharply against the limestone walls of the *Elroe* labyrinth. The damp, mineral-heavy air carries the copper tang of biological fluids, grounding your position in the dark. \n\nAs the biomass is broken down, a surge of vitality ripples through your frame, repairing the micro-fractures sustained during your initial emergence. However, the caloric cost of metabolism remains a constant variable; the exertion of digestion subtracts from your current endurance pool. The low-frequency hiss from your perimeter-marking still lingers in the air, a phantom warning to potential encroachers. You are currently isolated, but the sound of clicking appendages resonates from the darkness of the lower tunnel—a reminder that your territory is temporary and your presence is a biological anomaly in this stratum.\n\n**VITAL SIGNS:**\n-  (Bonus recovery from assimilation)\n- \n-  (Overflow capacity achieved)\n\n---\n\n**NEXT SEQUENCE OPTIONS:**', '[\"(BEAST) Release a hunting-chatter to test for nearby prey, heightening your senses to pinpoint movements in the dark. (Cost: Med SP, Low Hunger)\",\"(Scavenge) Scour the immediate vicinity for overlooked organic scraps or moisture deposits to bolster reserves. (Cost: Low SP)\",\"(Risky Action) Venture deeper into the damp, unmapped tunnel to locate a superior food source, risking potential combat with larger predators. (Cost: High HP Risk)\"]', '2026-04-06 23:23:33', 'http://localhost:7000/uploads/generic_1775336009652-172069962.png', NULL),
-(100, 10, 'Harvest the spider silk and store it.', '**SYSTEM STATUS: ANALYTICAL REPORT**\n\n**RESOURCE ACQUISITION:** The extraction of high-tensile silk from the surrounding limestone environment proceeds with 98% efficiency. Utilizing your multi-faceted appendages, you expertly reel in the sticky filaments, coiling them into a compact, manageable cluster. The tactile feedback confirms a high grade of elasticity; the material is optimal for trap construction or structural reinforcement.\n\n**ENVIRONMENTAL INTEGRATION:** The humidity of the *elroe_upper* tunnels clings to your carapace, cooling the residual heat from your recent consumption of organic matter. The scent-marking performed in the previous cycle remains active, creating a sensory barrier that has effectively discouraged encroachment from smaller, opportunistic predators. The acoustics of the cavern have shifted; the distant, rhythmic clicking of arachnid legs echoes against the damp stone, indicating proximity to other biological entities of similar classification. \n\n**BIOLOGICAL ASSESSMENT:** Your current caloric intake has stabilized, but your metabolism is accelerating to accommodate the conversion of consumed chitin into structural reinforcement. The chitinous remains you previously ingested have been fully processed, and your stamina reserves have reached a peak state of equilibrium. \n\n**URGENCY STATUS:** Your sensory cilia detect a subtle vibration in the ceiling webs—a heavy, rhythmic pulse suggesting an organism of higher mass than a standard Lesser Taratect is navigating your perimeter. Stationary survival is no longer statistically optimal.\n\n\n\n\n\n\n---', '[\"(Scout) Ascend the limestone walls to observe the source of the vibrations from a superior elevation. (Cost: Low SP)\",\"(BEAST) Aggressively dismantle the nearby web structure and reinforce your current nest to challenge any intruders. (Cost: Med SP)\",\"(Risky Action) Deploy a Hellfire Orb into the dark crevices above to flush out the source of the vibrations. (Cost: 25 MP)\"]', '2026-04-06 23:23:56', 'http://localhost:7000/uploads/generic_1775336009652-172069962.png', NULL);
+(100, 10, 'Harvest the spider silk and store it.', '**SYSTEM STATUS: ANALYTICAL REPORT**\n\n**RESOURCE ACQUISITION:** The extraction of high-tensile silk from the surrounding limestone environment proceeds with 98% efficiency. Utilizing your multi-faceted appendages, you expertly reel in the sticky filaments, coiling them into a compact, manageable cluster. The tactile feedback confirms a high grade of elasticity; the material is optimal for trap construction or structural reinforcement.\n\n**ENVIRONMENTAL INTEGRATION:** The humidity of the *elroe_upper* tunnels clings to your carapace, cooling the residual heat from your recent consumption of organic matter. The scent-marking performed in the previous cycle remains active, creating a sensory barrier that has effectively discouraged encroachment from smaller, opportunistic predators. The acoustics of the cavern have shifted; the distant, rhythmic clicking of arachnid legs echoes against the damp stone, indicating proximity to other biological entities of similar classification. \n\n**BIOLOGICAL ASSESSMENT:** Your current caloric intake has stabilized, but your metabolism is accelerating to accommodate the conversion of consumed chitin into structural reinforcement. The chitinous remains you previously ingested have been fully processed, and your stamina reserves have reached a peak state of equilibrium. \n\n**URGENCY STATUS:** Your sensory cilia detect a subtle vibration in the ceiling webs—a heavy, rhythmic pulse suggesting an organism of higher mass than a standard Lesser Taratect is navigating your perimeter. Stationary survival is no longer statistically optimal.\n\n\n\n\n\n\n---', '[\"(Scout) Ascend the limestone walls to observe the source of the vibrations from a superior elevation. (Cost: Low SP)\",\"(BEAST) Aggressively dismantle the nearby web structure and reinforce your current nest to challenge any intruders. (Cost: Med SP)\",\"(Risky Action) Deploy a Hellfire Orb into the dark crevices above to flush out the source of the vibrations. (Cost: 25 MP)\"]', '2026-04-06 23:23:56', 'http://localhost:7000/uploads/generic_1775336009652-172069962.png', NULL),
+(101, 10, 'rest', '**SYSTEM STATUS: ANALYTICAL REPORT**\n\n**BIOLOGICAL CALIBRATION:** Following the recent assimilation of nutrients and the stabilization of metabolic functions, the subject enters a state of dormancy. The limestone cavern, damp and permeated with the scent of stagnant water and decaying organic matter, provides a localized thermal efficiency buffer. \n\nAs the subject curls its chitinous frame, the tension of the harvested silk—stored within the immediate vicinity—serves as a crude sensory perimeter. The rhythmic vibrations of the labyrinth echo through the substratum, suggesting distant, massive movements that contrast with the subject\'s current state of equilibrium. With level advancement processed, the internal mana reservoirs have been optimized; the biological anomaly is now at peak operational capacity. The transition to Level 5 has increased the structural integrity of the carapace, providing a marginal buffer for future kinetic impacts.\n\nResting in the dark, the subject’s breathing slows to a clinical frequency. The cold dampness of the cavern wall against the underbelly does not disturb the recovery cycle.\n\n**URGENCY STATUS:** Caloric reserves are currently sufficient; however, the labyrinthine environment is unpredictable. Proximity to high-density monster traffic necessitates rapid strategic relocation or fortification before the current safety window expires.\n\n\n\n\n\n---', '[\"(BEAST) Engage in territorial marking by weaving a pheromone-laced web trap to deter or detect encroaching predators. (Cost: Medium SP, Low Hunger)\",\"(Scout) Carefully patrol the immediate tunnel network to map potential escape routes or ambush sites. (Cost: Low SP)\",\"(Risky Action) Venture toward the source of the rhythmic vibrations to scavenge high-value resources from a stronger predator\'s kill. (Cost: High HP Risk)\"]', '2026-04-07 00:11:08', 'http://localhost:7000/uploads/generic_1775336009652-172069962.png', NULL),
+(102, 10, 'I survey my changing body and the path ahead.', '[SYSTEM: EVOLUTION AVAILABLE] Your vessel may undergo metamorphosis. Choose an evolution from the options below, or speak a normal action to continue.\n\n**SYSTEM STATUS: ANALYTICAL REPORT**\n\n**BIOLOGICAL ASSESSMENT:** Integration of recent nutrients has stabilized, resulting in a minor thickening of the exoskeleton. Your field of vision—multi-faceted and twitchy—sweeps across the limestone expanse. You observe the residual chitin fragments from the previous assimilation clinging to your pedipalps, and the stored silk bundles secured against your thorax. \n\nThe cavern environment remains hostile. The temperature is a stagnant, damp cold that leeches heat from your core. Auditory sensors detect a rhythmic, clicking resonance echoing from the deeper tunnels—a vibration frequency consistent with larger, predatory arachnids. Your SPD attribute remains baseline; any rapid encounter with a superior predator would currently result in a failure to evade. The sulfurous, earthy stench of the damp stone fills your spiracles, grounding you in this lightless purgatory.\n\nYour metabolic furnace is currently functioning at 95% efficiency, but the caloric density of your last meal will only sustain movement for a limited window before the \"Hunger\" state triggers a performance drop. You are physically small, a nascent biological anomaly in a labyrinth designed to crush the weak. \n\n**URGENCY:** Your immediate surroundings are quiet, but the vibrations in the floor suggest the path ahead is occupied by unknown entities. Stagnation in this corridor will inevitably lead to territorial challenges.\n\n\n\n***', '[\"Evolve: Small Taratect\",\"Evolve: Small Poison Taratect\",\"(Explore) Navigate the cavern walls using your remaining silk to create a stable anchor point. (Cost: Low SP)\",\"(BEAST) Scuttle into the dark, using your heightened vibrations-sensing capabilities to hunt for smaller prey. (Cost: Med SP, Low Hunger)\"]', '2026-04-07 00:34:11', 'http://localhost:7000/uploads/generic_1775336009652-172069962.png', NULL),
+(103, 10, 'Evolve: Small Poison Taratect', 'You have become Small Poison Taratect. Unlocks advanced Poison Synthesis but reduces physical defense.', '[]', '2026-04-07 00:34:54', 'http://localhost:7000/uploads/generic_1775336009652-172069962.png', NULL);
 
 -- --------------------------------------------------------
 
@@ -210,7 +213,7 @@ CREATE TABLE `current_life` (
 
 INSERT INTO `current_life` (`life_id`, `user_id`, `species`, `vessel_type`, `current_level`, `hp`, `max_hp`, `mp`, `max_mp`, `hunger`, `sp`, `max_sp`, `current_location`, `is_alive`, `pos_x`, `pos_y`, `xp`, `next_level_xp`, `attribute_points`, `offense`, `defense`, `magic_power`, `resistance`, `speed`, `skill_points`, `inventory`, `home_base`) VALUES
 (9, 1, 'Cave Centipede', 'Beast', 1, 15, 15, 5, 5, 100, 20, 20, 'elroe_upper', 0, 0, 0, 0, 100, 0, 5, 5, 5, 5, 5, 0, '[]', NULL),
-(10, 1, 'Small Lesser Taratect', 'Beast', 4, 120, 120, 90, 90, 100, 129, 240, 'elroe_upper', 1, 0, 0, 125, 100, 0, 5, 5, 5, 5, 5, 0, '[\"Taratect Silk\"]', 'elroe_upper'),
+(10, 1, 'Small Poison Taratect', 'Beast', 10, 180, 180, 90, 90, 95, 360, 360, 'elroe_upper', 1, 0, 0, 110, 120, 5, 15, 15, 15, 15, 15, 2, '[\"Taratect Silk\"]', 'elroe_upper'),
 (11, 2, 'Scrap Slime', 'Beast', 1, 14, 20, 20, 20, 100, 20, 20, 'elroe_upper', 0, 0, 0, 0, 100, 0, 5, 5, 5, 5, 5, 0, '[]', NULL),
 (12, 2, 'Lesser Fire Wyrm', 'Beast', 1, 14, 25, 10, 10, 100, 20, 20, 'magma_layer', 1, 0, 0, 0, 100, 0, 5, 5, 5, 5, 5, 0, '[]', NULL),
 (13, 3, 'Blind Cave Salamander', 'Beast', 1, 27, 30, 10, 10, 100, 20, 20, 'water_stratum', 0, 0, 0, 0, 100, 0, 6, 12, 4, 15, 5, 0, '[]', NULL),
@@ -335,6 +338,7 @@ INSERT INTO `location_connectors` (`connector_id`, `from_location`, `to_location
 CREATE TABLE `location_seeds` (
   `location_id` varchar(50) NOT NULL,
   `description_seed` text DEFAULT NULL,
+  `hidden_lore` text DEFAULT NULL,
   `location_image` varchar(255) DEFAULT NULL,
   `danger_level` int(11) DEFAULT NULL,
   `region_name` varchar(50) DEFAULT 'elroe_labyrinth',
@@ -345,18 +349,18 @@ CREATE TABLE `location_seeds` (
 -- Dumping data for table `location_seeds`
 --
 
-INSERT INTO `location_seeds` (`location_id`, `description_seed`, `location_image`, `danger_level`, `region_name`, `level_depth`) VALUES
-('ash_tunnels', 'A suffocating network of tunnels filled with ash and smoke. Visibility is nearly zero, and breathing becomes a challenge. This is near-death territory.', 'http://localhost:7000/uploads/generic_1775338140044-109446823.png', 10, 'elroe_labyrinth', 4),
-('corpse_pit', 'A feeding ground filled with rotting carcasses. Scavengers and predators gather here, creating constant conflict. The smell alone is overwhelming.', 'http://localhost:7000/uploads/generic_1775337601515-83449986.png', 8, 'elroe_labyrinth', 3),
-('crystal_vein', 'A sharp, glowing cavern filled with crystal formations that hum with energy. Sound bends strangely here, and some creatures are drawn to its resonance.', 'http://localhost:7000/uploads/generic_1775337461034-28743475.png', 5, 'elroe_labyrinth', 2),
-('dragon_breach', 'A broken cavern shaped by the movement of ancient dragons. Heat, pressure, and danger fill the air. This is not a place for the weak.', 'http://localhost:7000/uploads/generic_1775337760634-865578033.png', 9, 'elroe_labyrinth', 3),
-('elroe_lower', 'Lower Elroe Labyrinth: A hellish, cavernous landscape teeming with earth dragons and venomous beasts.', 'http://localhost:7000/uploads/generic_1775337397083-148064841.png', 7, 'elroe_labyrinth', 2),
-('elroe_middle', 'A transitional layer where tunnels widen and dangers increase. Echoes travel far, and predators roam between upper and lower layers. This is where survival becomes strategy.', 'http://localhost:7000/uploads/generic_1775336809832-102049221.png', 4, 'elroe_labyrinth', 1),
-('elroe_upper', 'A sprawling network of dark, damp limestone caves. Weak monsters roam here, but survival is not guaranteed. Sticky webs line the ceilings, and the sound of distant movement never stops.', 'http://localhost:7000/uploads/generic_1775336009652-172069962.png', 2, 'elroe_labyrinth', 0),
-('fungus_grotto', 'A humid cavern glowing with bioluminescent fungi. Spores drift through the air, feeding scavengers and poison-based creatures. Some fungi heal others kill.', 'http://localhost:7000/uploads/generic_1775336277019-933342202.png', 3, 'elroe_labyrinth', 1),
-('magma_layer', 'Rivers of flowing lava cut through this region. The heat is unbearable, and only creatures adapted to extreme environments survive.', 'http://localhost:7000/uploads/generic_1775337971407-462015717.png', 9, 'elroe_labyrinth', 3),
-('water_stratum', 'A flooded section of the labyrinth filled with underground streams and submerged tunnels. Visibility is low, and movement is slowed. Creatures here rely on vibration and sound.', 'http://localhost:7000/uploads/generic_1775337006193-800054934.png', 5, 'elroe_labyrinth', 2),
-('webbed_hollows', 'A dense cluster of tunnels overtaken by spider colonies. Thick silk webs stretch across entire chambers, and egg sacs hang silently above. Movement is dangerous — and often noticed.', 'http://localhost:7000/uploads/generic_1775336056813-119887663.png', 3, 'elroe_labyrinth', 1);
+INSERT INTO `location_seeds` (`location_id`, `description_seed`, `hidden_lore`, `location_image`, `danger_level`, `region_name`, `level_depth`) VALUES
+('ash_tunnels', 'A suffocating network of tunnels filled with ash and smoke. Visibility is nearly zero, and breathing becomes a challenge. This is near-death territory.', NULL, 'http://localhost:7000/uploads/generic_1775338140044-109446823.png', 10, 'elroe_labyrinth', 4),
+('corpse_pit', 'A feeding ground filled with rotting carcasses. Scavengers and predators gather here, creating constant conflict. The smell alone is overwhelming.', NULL, 'http://localhost:7000/uploads/generic_1775337601515-83449986.png', 8, 'elroe_labyrinth', 3),
+('crystal_vein', 'A sharp, glowing cavern filled with crystal formations that hum with energy. Sound bends strangely here, and some creatures are drawn to its resonance.', NULL, 'http://localhost:7000/uploads/generic_1775337461034-28743475.png', 5, 'elroe_labyrinth', 2),
+('dragon_breach', 'A broken cavern shaped by the movement of ancient dragons. Heat, pressure, and danger fill the air. This is not a place for the weak.', NULL, 'http://localhost:7000/uploads/generic_1775337760634-865578033.png', 9, 'elroe_labyrinth', 3),
+('elroe_lower', 'Lower Elroe Labyrinth: A hellish, cavernous landscape teeming with earth dragons and venomous beasts.', NULL, 'http://localhost:7000/uploads/generic_1775337397083-148064841.png', 7, 'elroe_labyrinth', 2),
+('elroe_middle', 'A transitional layer where tunnels widen and dangers increase. Echoes travel far, and predators roam between upper and lower layers. This is where survival becomes strategy.', NULL, 'http://localhost:7000/uploads/generic_1775336809832-102049221.png', 4, 'elroe_labyrinth', 1),
+('elroe_upper', 'A sprawling network of dark, damp limestone caves. Weak monsters roam here, but survival is not guaranteed. Sticky webs line the ceilings, and the sound of distant movement never stops.', 'Carved into the damp stone: a faint mark that resembles a reincarnator\'s skill menu glyph.', 'http://localhost:7000/uploads/generic_1775336009652-172069962.png', 2, 'elroe_labyrinth', 0),
+('fungus_grotto', 'A humid cavern glowing with bioluminescent fungi. Spores drift through the air, feeding scavengers and poison-based creatures. Some fungi heal others kill.', NULL, 'http://localhost:7000/uploads/generic_1775336277019-933342202.png', 3, 'elroe_labyrinth', 1),
+('magma_layer', 'Rivers of flowing lava cut through this region. The heat is unbearable, and only creatures adapted to extreme environments survive.', NULL, 'http://localhost:7000/uploads/generic_1775337971407-462015717.png', 9, 'elroe_labyrinth', 3),
+('water_stratum', 'A flooded section of the labyrinth filled with underground streams and submerged tunnels. Visibility is low, and movement is slowed. Creatures here rely on vibration and sound.', NULL, 'http://localhost:7000/uploads/generic_1775337006193-800054934.png', 5, 'elroe_labyrinth', 2),
+('webbed_hollows', 'A dense cluster of tunnels overtaken by spider colonies. Thick silk webs stretch across entire chambers, and egg sacs hang silently above. Movement is dangerous — and often noticed.', 'A hidden spider-silk nest glimmers between two stalactites — abandoned, but strands still twitch as if something recently passed.', 'http://localhost:7000/uploads/generic_1775336056813-119887663.png', 3, 'elroe_labyrinth', 1);
 
 -- --------------------------------------------------------
 
@@ -494,8 +498,7 @@ CREATE TABLE `soul_library` (
   `user_id` int(11) NOT NULL,
   `soul_rank` int(11) DEFAULT 1,
   `accumulated_karma` int(11) DEFAULT 0,
-  `permanent_skills` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`permanent_skills`)),
-  `skills` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`skills`)),
+  `skills` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL DEFAULT '[]',
   `death_count` int(11) DEFAULT 0,
   `skill_points` int(11) DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -504,11 +507,11 @@ CREATE TABLE `soul_library` (
 -- Dumping data for table `soul_library`
 --
 
-INSERT INTO `soul_library` (`user_id`, `soul_rank`, `accumulated_karma`, `permanent_skills`, `skills`, `death_count`, `skill_points`) VALUES
-(1, 1, 0, '[\"Night Vision\",\"Thread Manipulation\",\"Camouflage\",\"Thread Craft\"]', '{}', 0, 0),
-(2, 1, 0, '[]', '{}', 0, 0),
-(3, 1, 55, '[]', '{}', 0, 0),
-(4, 1, 0, '[]', '{}', 0, 0);
+INSERT INTO `soul_library` (`user_id`, `soul_rank`, `accumulated_karma`, `skills`, `death_count`, `skill_points`) VALUES
+(1, 1, 0, '{\"Detection\": 1, \"Thread Manipulation\": 1, \"Acid Resistance\": 1}', 0, 0),
+(2, 1, 0, '[]', 0, 0),
+(3, 1, 55, '[]', 0, 0),
+(4, 1, 0, '[]', 0, 0);
 
 -- --------------------------------------------------------
 
@@ -557,6 +560,29 @@ INSERT INTO `starting_vessels` (`vessel_id`, `soul_path`, `species`, `base_hp`, 
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `story_milestones`
+--
+
+CREATE TABLE `story_milestones` (
+  `milestone_id` int(11) NOT NULL,
+  `code` varchar(64) NOT NULL,
+  `min_level` int(11) DEFAULT NULL,
+  `location_id` varchar(50) DEFAULT NULL,
+  `content` text NOT NULL,
+  `sort_order` int(11) DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `story_milestones`
+--
+
+INSERT INTO `story_milestones` (`milestone_id`, `code`, `min_level`, `location_id`, `content`, `sort_order`) VALUES
+(1, 'soul_resonance_lv5', 5, NULL, '[STORY BEAT] The System\'s voice steadies: your soul-resonance has crossed a threshold. Distant threads of other reincarnators tug at the edge of your perception — not as enemies, but as echoes in the same cruel fairytale.', 10),
+(2, 'labyrinth_whispers', NULL, 'elroe_upper', '[STORY BEAT] The upper labyrinth hums with more than monsters: somewhere, silk drags across stone, and a name you almost recognize flits through your thoughts.', 20);
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `users`
 --
 
@@ -581,6 +607,18 @@ INSERT INTO `users` (`id`, `email`, `username`, `password_hash`, `karma`, `perma
 (2, '8amjoker@gmail.com', 'joker', '$2b$10$KdHV2FZUFHeVTBn.F202Gu5UvetTetwIqXSdJVLV5lUXBMYgK95yW', 0, '[]', 'player', '2026-04-03 20:38:39', 'ADMIN'),
 (3, 'admin@admin.com', 'god', '$2b$10$yzahJBWCcGAa76.lFLzvsOquEc3nvk8j/6fw8oWBt5Iq9IVGugExq', 50, '[\"Appraisal\"]', 'admin', '2026-04-03 23:13:02', 'ADMIN'),
 (4, 'oghenesupersam914@gmail.com', 'sam', '$2b$10$qSORTKmr2y/Fst3sskTeZul1G.bscCXuiEoAUJooCZrqVWSp.yJyy', 0, '[]', 'player', '2026-04-04 01:42:30', 'ADMIN');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `user_story_milestones`
+--
+
+CREATE TABLE `user_story_milestones` (
+  `user_id` int(11) NOT NULL,
+  `milestone_id` int(11) NOT NULL,
+  `triggered_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -709,12 +747,27 @@ ALTER TABLE `starting_vessels`
   ADD PRIMARY KEY (`vessel_id`);
 
 --
+-- Indexes for table `story_milestones`
+--
+ALTER TABLE `story_milestones`
+  ADD PRIMARY KEY (`milestone_id`),
+  ADD UNIQUE KEY `code` (`code`),
+  ADD KEY `idx_sort` (`sort_order`);
+
+--
 -- Indexes for table `users`
 --
 ALTER TABLE `users`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `email` (`email`),
   ADD UNIQUE KEY `username` (`username`);
+
+--
+-- Indexes for table `user_story_milestones`
+--
+ALTER TABLE `user_story_milestones`
+  ADD PRIMARY KEY (`user_id`,`milestone_id`),
+  ADD KEY `milestone_id` (`milestone_id`);
 
 --
 -- Indexes for table `zone_spawns`
@@ -731,7 +784,7 @@ ALTER TABLE `zone_spawns`
 -- AUTO_INCREMENT for table `action_logs`
 --
 ALTER TABLE `action_logs`
-  MODIFY `log_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=101;
+  MODIFY `log_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=104;
 
 --
 -- AUTO_INCREMENT for table `active_encounters`
@@ -804,6 +857,12 @@ ALTER TABLE `relationships`
 --
 ALTER TABLE `starting_vessels`
   MODIFY `vessel_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
+
+--
+-- AUTO_INCREMENT for table `story_milestones`
+--
+ALTER TABLE `story_milestones`
+  MODIFY `milestone_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
 
 --
 -- AUTO_INCREMENT for table `users`
